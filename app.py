@@ -79,15 +79,15 @@ selected_plan = st.sidebar.multiselect("Plan Type", plan_opts, default=plan_opts
 selected_state = st.sidebar.multiselect("State", state_opts, default=state_opts)
 
 
-def where_clause():
+def where_clause(has_plan_type=True, has_member_state=True):
     parts = []
     if selected_lob:
         vals = ", ".join(f"'{v}'" for v in selected_lob)
         parts.append(f"line_of_business IN ({vals})")
-    if selected_plan:
+    if has_plan_type and selected_plan:
         vals = ", ".join(f"'{v}'" for v in selected_plan)
         parts.append(f"plan_type IN ({vals})")
-    if selected_state:
+    if has_member_state and selected_state:
         vals = ", ".join(f"'{v}'" for v in selected_state)
         parts.append(f"member_state IN ({vals})")
     return " AND ".join(parts) if parts else "1=1"
@@ -154,7 +154,7 @@ with col_left:
                SUM(total_paid) AS total_paid,
                SUM(claim_count) AS claims
         FROM {CATALOG}.{SCHEMA}.tcoc_service_category_costs
-        WHERE {wc}
+        WHERE {where_clause(has_member_state=False)}
         GROUP BY procedure_category
         ORDER BY total_paid DESC
     """)
@@ -239,7 +239,7 @@ prov_df = query(f"""
            SUM(total_claims) AS claims,
            SUM(unique_patients) AS patients
     FROM {CATALOG}.{SCHEMA}.tcoc_provider_network_analysis
-    WHERE {wc}
+    WHERE {where_clause(has_plan_type=False, has_member_state=False)}
     GROUP BY provider_id, provider_specialty, network_status
     ORDER BY total_paid DESC
     LIMIT 20
