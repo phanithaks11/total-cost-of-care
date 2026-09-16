@@ -1,4 +1,4 @@
-# Abacus Insights — Total Cost of Care (TCOC)
+# Luminos Health — Total Cost of Care (TCOC)
 
 A healthcare cost analytics platform built on Databricks Lakeflow Spark Declarative Pipelines, following the **medallion architecture** (Bronze → Silver → Gold) to transform raw payer claims and clinical EHR data into analytics-ready tables powering an executive dashboard.
 
@@ -38,7 +38,7 @@ A healthcare cost analytics platform built on Databricks Lakeflow Spark Declarat
 └──────────────────────┬──────────────────────────────────────────┘
                        ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  DASHBOARD — Abacus Insights Total Cost of Care                 │
+│  DASHBOARD — Luminos Health Total Cost of Care                 │
 │  5 pages: Executive Summary, PMPM Trends, Service Categories,   │
 │  Network & Provider, Geography                                  │
 └─────────────────────────────────────────────────────────────────┘
