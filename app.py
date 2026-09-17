@@ -169,261 +169,359 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ── Executive KPIs ──────────────────────────────────────────────────
 
-kpi_df = query(f"SELECT * FROM {CATALOG}.{SCHEMA}.tcoc_executive_kpis")
+tab_overview, tab_forecast = st.tabs(["📊 Overview", "📈 Cost Forecast"])
 
-if not kpi_df.empty:
-    r = kpi_df.iloc[0]
-    kpi_data = [
-        ("Total Members",    f'{int(float(r.get("total_members", 0))):,}',  ""),
-        ("Total Paid",       f'${float(r.get("total_paid", 0)):,.0f}',      "blue"),
-        ("PMPM",             f'${float(r.get("overall_pmpm", 0)):,.2f}',    ""),
-        ("Claims",           f'{int(float(r.get("total_claims", 0))):,}',   "purple"),
-        ("Denial Rate",      f'{float(r.get("denial_rate_pct", 0)):.1f}%',  "red"),
-        ("Network Leakage",  f'{float(r.get("network_leakage_pct", 0)):.1f}%', "amber"),
-    ]
-    cards_html = '<div class="kpi-row">' + "".join(
-        f'<div class="kpi-card {cls}"><div class="label">{lbl}</div><div class="value">{val}</div></div>'
-        for lbl, val, cls in kpi_data
-    ) + '</div>'
-    st.markdown(cards_html, unsafe_allow_html=True)
+with tab_overview:
 
-# ── PMPM Trends ─────────────────────────────────────────────────────
+    # ── Executive KPIs ──────────────────────────────────────────────────
 
-st.markdown('<div class="section-card"><h3>PMPM Trends</h3><div class="subtitle">Monthly per-member-per-month cost by line of business</div></div>', unsafe_allow_html=True)
+    kpi_df = query(f"SELECT * FROM {CATALOG}.{SCHEMA}.tcoc_executive_kpis")
 
-wc = where_clause()
-trends_df = query(f"""
-    SELECT report_month, line_of_business,
-           SUM(total_paid) / NULLIF(SUM(active_members), 0) AS pmpm,
-           SUM(active_members) AS members,
-           SUM(claim_count) AS claims
-    FROM {CATALOG}.{SCHEMA}.tcoc_pmpm_trends
-    WHERE {wc}
-    GROUP BY report_month, line_of_business
-    ORDER BY report_month
-""")
+    if not kpi_df.empty:
+        r = kpi_df.iloc[0]
+        kpi_data = [
+            ("Total Members",    f'{int(float(r.get("total_members", 0))):,}',  ""),
+            ("Total Paid",       f'${float(r.get("total_paid", 0)):,.0f}',      "blue"),
+            ("PMPM",             f'${float(r.get("overall_pmpm", 0)):,.2f}',    ""),
+            ("Claims",           f'{int(float(r.get("total_claims", 0))):,}',   "purple"),
+            ("Denial Rate",      f'{float(r.get("denial_rate_pct", 0)):.1f}%',  "red"),
+            ("Network Leakage",  f'{float(r.get("network_leakage_pct", 0)):.1f}%', "amber"),
+        ]
+        cards_html = '<div class="kpi-row">' + "".join(
+            f'<div class="kpi-card {cls}"><div class="label">{lbl}</div><div class="value">{val}</div></div>'
+            for lbl, val, cls in kpi_data
+        ) + '</div>'
+        st.markdown(cards_html, unsafe_allow_html=True)
 
-if not trends_df.empty:
-    trends_df["pmpm"] = pd.to_numeric(trends_df["pmpm"], errors="coerce")
-    trends_df["report_month"] = pd.to_datetime(trends_df["report_month"], errors="coerce")
-    fig = px.line(
-        trends_df, x="report_month", y="pmpm", color="line_of_business",
-        labels={"report_month": "Month", "pmpm": "PMPM ($)", "line_of_business": "LOB"},
-    )
-    fig.update_traces(line=dict(width=2.5))
-    _style_fig(fig, 420)
-    st.plotly_chart(fig, use_container_width=True)
-else:
-    st.info("No trend data for selected filters.")
+    # ── PMPM Trends ─────────────────────────────────────────────────────
 
-# ── Two-column: Service Categories + Geography ─────────────────────
+    st.markdown('<div class="section-card"><h3>PMPM Trends</h3><div class="subtitle">Monthly per-member-per-month cost by line of business</div></div>', unsafe_allow_html=True)
 
-col_left, col_right = st.columns(2, gap="large")
-
-with col_left:
-    st.markdown('<div class="section-card"><h3>Cost by Service Category</h3><div class="subtitle">Total paid grouped by procedure type</div></div>', unsafe_allow_html=True)
-    svc_df = query(f"""
-        SELECT procedure_category,
-               SUM(total_paid) AS total_paid,
-               SUM(claim_count) AS claims
-        FROM {CATALOG}.{SCHEMA}.tcoc_service_category_costs
-        WHERE {where_clause(has_member_state=False)}
-        GROUP BY procedure_category
-        ORDER BY total_paid DESC
-    """)
-    if not svc_df.empty:
-        svc_df["total_paid"] = pd.to_numeric(svc_df["total_paid"], errors="coerce")
-        fig2 = px.bar(
-            svc_df, x="total_paid", y="procedure_category", orientation="h",
-            labels={"procedure_category": "", "total_paid": "Total Paid ($)"},
-            color_discrete_sequence=[ACCENT],
-        )
-        fig2.update_traces(marker=dict(cornerradius=4))
-        _style_fig(fig2, 400)
-        fig2.update_layout(yaxis=dict(categoryorder="total ascending", gridcolor="rgba(0,0,0,0)"))
-        st.plotly_chart(fig2, use_container_width=True)
-
-with col_right:
-    st.markdown('<div class="section-card"><h3>PMPM by State</h3><div class="subtitle">Geographic cost variation</div></div>', unsafe_allow_html=True)
-    geo_df = query(f"""
-        SELECT member_state,
-               SUM(total_paid) / NULLIF(SUM(active_members), 0) AS pmpm
-        FROM {CATALOG}.{SCHEMA}.tcoc_geographic_analysis
-        WHERE {wc}
-        GROUP BY member_state
-        ORDER BY pmpm DESC
-    """)
-    if not geo_df.empty:
-        geo_df["pmpm"] = pd.to_numeric(geo_df["pmpm"], errors="coerce")
-        fig3 = px.bar(
-            geo_df, x="member_state", y="pmpm",
-            labels={"member_state": "State", "pmpm": "PMPM ($)"},
-            color="pmpm",
-            color_continuous_scale=[[0, "#5EEAD4"], [0.5, ACCENT], [1, DANGER]],
-        )
-        fig3.update_traces(marker=dict(cornerradius=4))
-        _style_fig(fig3, 400)
-        st.plotly_chart(fig3, use_container_width=True)
-
-
-# ── Denial Rate & Network Leakage by LOB ───────────────────────────
-
-st.markdown('<div class="section-card"><h3>Denial Rate & Network Leakage by LOB</h3><div class="subtitle">Claims denied and out-of-network spend as percentage of total</div></div>', unsafe_allow_html=True)
-
-dn_df = query(f"""
-    SELECT line_of_business,
-           SUM(denied_count) * 100.0 / NULLIF(SUM(claim_count), 0) AS denial_rate,
-           SUM(oon_paid) * 100.0 / NULLIF(SUM(total_paid), 0) AS network_leakage
-    FROM {CATALOG}.{SCHEMA}.tcoc_pmpm_trends
-    WHERE {wc}
-    GROUP BY line_of_business
-""")
-
-if not dn_df.empty:
-    dn_df["denial_rate"] = pd.to_numeric(dn_df["denial_rate"], errors="coerce")
-    dn_df["network_leakage"] = pd.to_numeric(dn_df["network_leakage"], errors="coerce")
-    d1, d2 = st.columns(2, gap="large")
-    with d1:
-        fig4 = px.bar(
-            dn_df, x="line_of_business", y="denial_rate",
-            labels={"line_of_business": "LOB", "denial_rate": "Denial Rate (%)"},
-            color_discrete_sequence=[DANGER],
-        )
-        fig4.update_traces(marker=dict(cornerradius=4))
-        _style_fig(fig4, 380)
-        fig4.update_layout(title=dict(text="Denial Rate", font=dict(size=14)))
-        st.plotly_chart(fig4, use_container_width=True)
-    with d2:
-        fig5 = px.bar(
-            dn_df, x="line_of_business", y="network_leakage",
-            labels={"line_of_business": "LOB", "network_leakage": "Network Leakage (%)"},
-            color_discrete_sequence=[WARNING],
-        )
-        fig5.update_traces(marker=dict(cornerradius=4))
-        _style_fig(fig5, 380)
-        fig5.update_layout(title=dict(text="Network Leakage", font=dict(size=14)))
-        st.plotly_chart(fig5, use_container_width=True)
-
-
-# ── Provider Analysis ──────────────────────────────────────────────
-
-st.markdown('<div class="section-card"><h3>Top Providers by Total Paid</h3><div class="subtitle">Top 20 providers ranked by total reimbursement</div></div>', unsafe_allow_html=True)
-
-prov_df = query(f"""
-    SELECT provider_id, provider_specialty, network_status,
-           SUM(total_paid) AS total_paid,
-           SUM(total_claims) AS claims,
-           SUM(unique_patients) AS patients
-    FROM {CATALOG}.{SCHEMA}.tcoc_provider_network_analysis
-    WHERE {where_clause(has_plan_type=False, has_member_state=False)}
-    GROUP BY provider_id, provider_specialty, network_status
-    ORDER BY total_paid DESC
-    LIMIT 20
-""")
-
-if not prov_df.empty:
-    prov_df["total_paid"] = pd.to_numeric(prov_df["total_paid"], errors="coerce")
-    prov_df["claims"] = pd.to_numeric(prov_df["claims"], errors="coerce")
-    prov_df["patients"] = pd.to_numeric(prov_df["patients"], errors="coerce")
-    st.dataframe(
-        prov_df.style.format({"total_paid": "${:,.0f}", "claims": "{:,.0f}", "patients": "{:,.0f}"}),
-        use_container_width=True,
-        hide_index=True,
-    )
-
-# ── 6-Month Cost Forecast ──────────────────────────────────────────
-
-st.markdown('<div class="section-card"><h3>\U0001f4c8 6-Month Cost Forecast (Jan\u2013Jun 2026)</h3><div class="subtitle">LightGBM model trained on historical claims \u2014 registered in Unity Catalog</div></div>', unsafe_allow_html=True)
-
-forecast_wc = where_clause()
-forecast_df = query(f"""
-    SELECT forecast_month, line_of_business, plan_type, member_state,
-           predicted_paid, predicted_pmpm, lower_bound, upper_bound, model_version
-    FROM {CATALOG}.{SCHEMA}.tcoc_cost_forecast
-    WHERE {forecast_wc}
-""")
-
-if not forecast_df.empty:
-    for col in ["predicted_paid", "predicted_pmpm", "lower_bound", "upper_bound"]:
-        forecast_df[col] = pd.to_numeric(forecast_df[col], errors="coerce")
-    forecast_df["forecast_month"] = pd.to_datetime(forecast_df["forecast_month"], errors="coerce")
-
-    total_projected = forecast_df["predicted_paid"].sum()
-    avg_pmpm = forecast_df["predicted_pmpm"].mean()
-    model_ver = forecast_df["model_version"].iloc[0]
-    fc_cards = f"""
-    <div class="kpi-row">
-        <div class="kpi-card blue"><div class="label">Projected 6-Month Total</div><div class="value">${total_projected:,.0f}</div></div>
-        <div class="kpi-card"><div class="label">Avg Forecast PMPM</div><div class="value">${avg_pmpm:,.2f}</div></div>
-        <div class="kpi-card purple"><div class="label">Model Version</div><div class="value">{model_ver}</div></div>
-    </div>
-    """
-    st.markdown(fc_cards, unsafe_allow_html=True)
-
-    # Actual vs Forecast line chart
-    actual_df = query(f"""
-        SELECT report_month AS month, line_of_business,
+    wc = where_clause()
+    trends_df = query(f"""
+        SELECT report_month, line_of_business,
                SUM(total_paid) / NULLIF(SUM(active_members), 0) AS pmpm,
-               'Actual' AS series_type
+               SUM(active_members) AS members,
+               SUM(claim_count) AS claims
         FROM {CATALOG}.{SCHEMA}.tcoc_pmpm_trends
-        WHERE {forecast_wc}
+        WHERE {wc}
         GROUP BY report_month, line_of_business
-        UNION ALL
-        SELECT forecast_month AS month, line_of_business,
-               AVG(predicted_pmpm) AS pmpm,
-               'Forecast' AS series_type
+        ORDER BY report_month
+    """)
+
+    if not trends_df.empty:
+        trends_df["pmpm"] = pd.to_numeric(trends_df["pmpm"], errors="coerce")
+        trends_df["report_month"] = pd.to_datetime(trends_df["report_month"], errors="coerce")
+        fig = px.line(
+            trends_df, x="report_month", y="pmpm", color="line_of_business",
+            labels={"report_month": "Month", "pmpm": "PMPM ($)", "line_of_business": "LOB"},
+        )
+        fig.update_traces(line=dict(width=2.5))
+        _style_fig(fig, 420)
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("No trend data for selected filters.")
+
+    # ── Two-column: Service Categories + Geography ─────────────────────
+
+    col_left, col_right = st.columns(2, gap="large")
+
+    with col_left:
+        st.markdown('<div class="section-card"><h3>Cost by Service Category</h3><div class="subtitle">Total paid grouped by procedure type</div></div>', unsafe_allow_html=True)
+        svc_df = query(f"""
+            SELECT procedure_category,
+                   SUM(total_paid) AS total_paid,
+                   SUM(claim_count) AS claims
+            FROM {CATALOG}.{SCHEMA}.tcoc_service_category_costs
+            WHERE {where_clause(has_member_state=False)}
+            GROUP BY procedure_category
+            ORDER BY total_paid DESC
+        """)
+        if not svc_df.empty:
+            svc_df["total_paid"] = pd.to_numeric(svc_df["total_paid"], errors="coerce")
+            fig2 = px.bar(
+                svc_df, x="total_paid", y="procedure_category", orientation="h",
+                labels={"procedure_category": "", "total_paid": "Total Paid ($)"},
+                color_discrete_sequence=[ACCENT],
+            )
+            fig2.update_traces(marker=dict(cornerradius=4))
+            _style_fig(fig2, 400)
+            fig2.update_layout(yaxis=dict(categoryorder="total ascending", gridcolor="rgba(0,0,0,0)"))
+            st.plotly_chart(fig2, use_container_width=True)
+
+    with col_right:
+        st.markdown('<div class="section-card"><h3>PMPM by State</h3><div class="subtitle">Geographic cost variation</div></div>', unsafe_allow_html=True)
+        geo_df = query(f"""
+            SELECT member_state,
+                   SUM(total_paid) / NULLIF(SUM(active_members), 0) AS pmpm
+            FROM {CATALOG}.{SCHEMA}.tcoc_geographic_analysis
+            WHERE {wc}
+            GROUP BY member_state
+            ORDER BY pmpm DESC
+        """)
+        if not geo_df.empty:
+            geo_df["pmpm"] = pd.to_numeric(geo_df["pmpm"], errors="coerce")
+            fig3 = px.bar(
+                geo_df, x="member_state", y="pmpm",
+                labels={"member_state": "State", "pmpm": "PMPM ($)"},
+                color="pmpm",
+                color_continuous_scale=[[0, "#5EEAD4"], [0.5, ACCENT], [1, DANGER]],
+            )
+            fig3.update_traces(marker=dict(cornerradius=4))
+            _style_fig(fig3, 400)
+            st.plotly_chart(fig3, use_container_width=True)
+
+
+    # ── Denial Rate & Network Leakage by LOB ───────────────────────────
+
+    st.markdown('<div class="section-card"><h3>Denial Rate & Network Leakage by LOB</h3><div class="subtitle">Claims denied and out-of-network spend as percentage of total</div></div>', unsafe_allow_html=True)
+
+    dn_df = query(f"""
+        SELECT line_of_business,
+               SUM(denied_count) * 100.0 / NULLIF(SUM(claim_count), 0) AS denial_rate,
+               SUM(oon_paid) * 100.0 / NULLIF(SUM(total_paid), 0) AS network_leakage
+        FROM {CATALOG}.{SCHEMA}.tcoc_pmpm_trends
+        WHERE {wc}
+        GROUP BY line_of_business
+    """)
+
+    if not dn_df.empty:
+        dn_df["denial_rate"] = pd.to_numeric(dn_df["denial_rate"], errors="coerce")
+        dn_df["network_leakage"] = pd.to_numeric(dn_df["network_leakage"], errors="coerce")
+        d1, d2 = st.columns(2, gap="large")
+        with d1:
+            fig4 = px.bar(
+                dn_df, x="line_of_business", y="denial_rate",
+                labels={"line_of_business": "LOB", "denial_rate": "Denial Rate (%)"},
+                color_discrete_sequence=[DANGER],
+            )
+            fig4.update_traces(marker=dict(cornerradius=4))
+            _style_fig(fig4, 380)
+            fig4.update_layout(title=dict(text="Denial Rate", font=dict(size=14)))
+            st.plotly_chart(fig4, use_container_width=True)
+        with d2:
+            fig5 = px.bar(
+                dn_df, x="line_of_business", y="network_leakage",
+                labels={"line_of_business": "LOB", "network_leakage": "Network Leakage (%)"},
+                color_discrete_sequence=[WARNING],
+            )
+            fig5.update_traces(marker=dict(cornerradius=4))
+            _style_fig(fig5, 380)
+            fig5.update_layout(title=dict(text="Network Leakage", font=dict(size=14)))
+            st.plotly_chart(fig5, use_container_width=True)
+
+
+    # ── Provider Analysis ──────────────────────────────────────────────
+
+    st.markdown('<div class="section-card"><h3>Top Providers by Total Paid</h3><div class="subtitle">Top 20 providers ranked by total reimbursement</div></div>', unsafe_allow_html=True)
+
+    prov_df = query(f"""
+        SELECT provider_id, provider_specialty, network_status,
+               SUM(total_paid) AS total_paid,
+               SUM(total_claims) AS claims,
+               SUM(unique_patients) AS patients
+        FROM {CATALOG}.{SCHEMA}.tcoc_provider_network_analysis
+        WHERE {where_clause(has_plan_type=False, has_member_state=False)}
+        GROUP BY provider_id, provider_specialty, network_status
+        ORDER BY total_paid DESC
+        LIMIT 20
+    """)
+
+    if not prov_df.empty:
+        prov_df["total_paid"] = pd.to_numeric(prov_df["total_paid"], errors="coerce")
+        prov_df["claims"] = pd.to_numeric(prov_df["claims"], errors="coerce")
+        prov_df["patients"] = pd.to_numeric(prov_df["patients"], errors="coerce")
+        st.dataframe(
+            prov_df.style.format({"total_paid": "${:,.0f}", "claims": "{:,.0f}", "patients": "{:,.0f}"}),
+            use_container_width=True,
+            hide_index=True,
+        )
+
+
+with tab_forecast:
+
+    # ── 6-Month Cost Forecast ──────────────────────────────────────────
+
+    st.markdown('<div class="section-card"><h3>\U0001f4c8 6-Month Cost Forecast (Jan\u2013Jun 2026)</h3><div class="subtitle">LightGBM model trained on historical claims \u2014 registered in Unity Catalog</div></div>', unsafe_allow_html=True)
+
+    forecast_wc = where_clause()
+    forecast_df = query(f"""
+        SELECT forecast_month, line_of_business, plan_type, member_state,
+               predicted_paid, predicted_pmpm, lower_bound, upper_bound, model_version
         FROM {CATALOG}.{SCHEMA}.tcoc_cost_forecast
         WHERE {forecast_wc}
-        GROUP BY forecast_month, line_of_business
-        ORDER BY month
     """)
-    if not actual_df.empty:
-        actual_df["pmpm"] = pd.to_numeric(actual_df["pmpm"], errors="coerce")
-        actual_df["month"] = pd.to_datetime(actual_df["month"], errors="coerce")
-        fig_fc = px.line(
-            actual_df, x="month", y="pmpm", color="line_of_business",
-            line_dash="series_type",
-            labels={"month": "Month", "pmpm": "PMPM ($)", "line_of_business": "LOB", "series_type": "Type"},
-        )
-        fig_fc.update_traces(line=dict(width=2.5))
-        _style_fig(fig_fc, 450)
-        fig_fc.update_layout(title=dict(text="Actual vs Forecast PMPM by LOB", font=dict(size=14, color=PRIMARY)))
-        st.plotly_chart(fig_fc, use_container_width=True)
 
-    # Forecast by LOB bar + state table
-    fl, fr = st.columns(2, gap="large")
-    with fl:
-        lob_fc = forecast_df.groupby("line_of_business", as_index=False)["predicted_paid"].sum()
-        fig_lob = px.bar(
-            lob_fc, x="line_of_business", y="predicted_paid",
-            labels={"line_of_business": "LOB", "predicted_paid": "Projected Total ($)"},
-        )
-        fig_lob.update_traces(marker=dict(cornerradius=4))
-        _style_fig(fig_lob, 400)
-        fig_lob.update_layout(title=dict(text="Forecasted Cost by LOB", font=dict(size=14)), showlegend=False)
-        st.plotly_chart(fig_lob, use_container_width=True)
-    with fr:
-        state_fc = (
-            forecast_df.groupby(["member_state", "line_of_business"], as_index=False)
-            .agg(total_predicted=pd.NamedAgg("predicted_paid", "sum"),
-                 avg_pmpm=pd.NamedAgg("predicted_pmpm", "mean"),
-                 min_lower=pd.NamedAgg("lower_bound", "min"),
-                 max_upper=pd.NamedAgg("upper_bound", "max"))
-            .sort_values("total_predicted", ascending=False)
-        )
-        st.dataframe(
-            state_fc.style.format({
-                "total_predicted": "${:,.0f}",
-                "avg_pmpm": "${:,.2f}",
-                "min_lower": "${:,.0f}",
-                "max_upper": "${:,.0f}",
-            }),
-            use_container_width=True, hide_index=True, height=400,
-        )
-else:
-    st.info("No forecast data available. Run the cost forecast model notebook first.")
+    if not forecast_df.empty:
+        for col in ["predicted_paid", "predicted_pmpm", "lower_bound", "upper_bound"]:
+            forecast_df[col] = pd.to_numeric(forecast_df[col], errors="coerce")
+        forecast_df["forecast_month"] = pd.to_datetime(forecast_df["forecast_month"], errors="coerce")
+
+        total_projected = forecast_df["predicted_paid"].sum()
+        avg_pmpm = forecast_df["predicted_pmpm"].mean()
+        model_ver = forecast_df["model_version"].iloc[0]
+        fc_cards = f"""
+        <div class="kpi-row">
+            <div class="kpi-card blue"><div class="label">Projected 6-Month Total</div><div class="value">${total_projected:,.0f}</div></div>
+            <div class="kpi-card"><div class="label">Avg Forecast PMPM</div><div class="value">${avg_pmpm:,.2f}</div></div>
+            <div class="kpi-card purple"><div class="label">Model Version</div><div class="value">{model_ver}</div></div>
+        </div>
+        """
+        st.markdown(fc_cards, unsafe_allow_html=True)
+
+        # Actual vs Forecast line chart
+        actual_df = query(f"""
+            SELECT report_month AS month, line_of_business,
+                   SUM(total_paid) / NULLIF(SUM(active_members), 0) AS pmpm,
+                   'Actual' AS series_type
+            FROM {CATALOG}.{SCHEMA}.tcoc_pmpm_trends
+            WHERE {forecast_wc}
+            GROUP BY report_month, line_of_business
+            UNION ALL
+            SELECT forecast_month AS month, line_of_business,
+                   AVG(predicted_pmpm) AS pmpm,
+                   'Forecast' AS series_type
+            FROM {CATALOG}.{SCHEMA}.tcoc_cost_forecast
+            WHERE {forecast_wc}
+            GROUP BY forecast_month, line_of_business
+            ORDER BY month
+        """)
+        if not actual_df.empty:
+            actual_df["pmpm"] = pd.to_numeric(actual_df["pmpm"], errors="coerce")
+            actual_df["month"] = pd.to_datetime(actual_df["month"], errors="coerce")
+            fig_fc = px.line(
+                actual_df, x="month", y="pmpm", color="line_of_business",
+                line_dash="series_type",
+                labels={"month": "Month", "pmpm": "PMPM ($)", "line_of_business": "LOB", "series_type": "Type"},
+            )
+            fig_fc.update_traces(line=dict(width=2.5))
+            _style_fig(fig_fc, 450)
+            fig_fc.update_layout(title=dict(text="Actual vs Forecast PMPM by LOB", font=dict(size=14, color=PRIMARY)))
+            st.plotly_chart(fig_fc, use_container_width=True)
+
+        # Forecast by LOB bar + state table
+        fl, fr = st.columns(2, gap="large")
+        with fl:
+            lob_fc = forecast_df.groupby("line_of_business", as_index=False)["predicted_paid"].sum()
+            fig_lob = px.bar(
+                lob_fc, x="line_of_business", y="predicted_paid",
+                labels={"line_of_business": "LOB", "predicted_paid": "Projected Total ($)"},
+            )
+            fig_lob.update_traces(marker=dict(cornerradius=4))
+            _style_fig(fig_lob, 400)
+            fig_lob.update_layout(title=dict(text="Forecasted Cost by LOB", font=dict(size=14)), showlegend=False)
+            st.plotly_chart(fig_lob, use_container_width=True)
+        with fr:
+            state_fc = (
+                forecast_df.groupby(["member_state", "line_of_business"], as_index=False)
+                .agg(total_predicted=pd.NamedAgg("predicted_paid", "sum"),
+                     avg_pmpm=pd.NamedAgg("predicted_pmpm", "mean"),
+                     min_lower=pd.NamedAgg("lower_bound", "min"),
+                     max_upper=pd.NamedAgg("upper_bound", "max"))
+                .sort_values("total_predicted", ascending=False)
+            )
+            st.dataframe(
+                state_fc.style.format({
+                    "total_predicted": "${:,.0f}",
+                    "avg_pmpm": "${:,.2f}",
+                    "min_lower": "${:,.0f}",
+                    "max_upper": "${:,.0f}",
+                }),
+                use_container_width=True, hide_index=True, height=400,
+            )
+    else:
+        st.info("No forecast data available. Run the cost forecast model notebook first.")
+
+    # ── Real-Time Scoring via Model Serving Endpoint ───────────────────
+
+    st.divider()
+    st.markdown('<div class="section-card"><h3>⚡ Real-Time Cost Prediction</h3><div class="subtitle">Score a single segment on-demand via the Model Serving endpoint</div></div>', unsafe_allow_html=True)
+
+    ENDPOINT_NAME = "cost_forecast_model"
+
+    rt_col1, rt_col2, rt_col3, rt_col4 = st.columns(4)
+    with rt_col1:
+        rt_lob = st.selectbox("Line of Business", lob_opts, key="rt_lob")
+    with rt_col2:
+        rt_plan = st.selectbox("Plan Type", plan_opts, key="rt_plan")
+    with rt_col3:
+        rt_state = st.selectbox("State", state_opts, key="rt_state")
+    with rt_col4:
+        rt_month = st.selectbox("Forecast Month", ["2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06"], key="rt_month")
+
+    if st.button("🔮 Predict Cost", type="primary", use_container_width=False):
+        # Build the feature vector from the latest historical data for this segment
+        feature_sql = f"""
+            SELECT *
+            FROM {CATALOG}.tcoc_ml.cost_forecast_features
+            WHERE line_of_business = '{rt_lob}'
+              AND plan_type = '{rt_plan}'
+              AND member_state = '{rt_state}'
+            ORDER BY service_month DESC
+            LIMIT 1
+        """
+        feat_df = query(feature_sql)
+
+        if feat_df.empty:
+            st.warning(f"No historical features found for {rt_lob} / {rt_plan} / {rt_state}.")
+        else:
+            import json
+            from datetime import datetime
+
+            latest = feat_df.iloc[0]
+            target_date = datetime.strptime(rt_month, "%Y-%m")
+
+            feature_columns = [
+                "line_of_business", "plan_type", "member_state",
+                "month_num", "quarter_num", "year_num", "month_index",
+                "paid_lag_1", "paid_lag_2", "paid_lag_3", "paid_lag_6",
+                "pmpm_lag_1", "pmpm_lag_2", "pmpm_lag_3",
+                "claims_lag_1", "claims_lag_2", "members_lag_1",
+                "paid_rolling_3m_avg", "paid_rolling_6m_avg",
+                "pmpm_rolling_3m_avg", "pmpm_rolling_6m_avg",
+                "claims_rolling_3m_avg", "denial_rate_rolling_3m_avg",
+                "paid_mom_change", "pmpm_mom_change", "paid_volatility_3m",
+            ]
+
+            # Build payload using latest features, overriding temporal fields
+            payload_row = {}
+            for col in feature_columns:
+                if col == "month_num":
+                    payload_row[col] = target_date.month
+                elif col == "quarter_num":
+                    payload_row[col] = ((target_date.month - 1) // 3) + 1
+                elif col == "year_num":
+                    payload_row[col] = target_date.year
+                elif col == "month_index":
+                    payload_row[col] = int(float(latest.get("month_index", 12))) + 1
+                elif col in ("line_of_business", "plan_type", "member_state"):
+                    payload_row[col] = str(latest[col])
+                else:
+                    val = latest.get(col)
+                    payload_row[col] = float(val) if val is not None and str(val) != "None" else None
+
+            try:
+                w = _client()
+                response = w.serving_endpoints.query(
+                    name=ENDPOINT_NAME,
+                    dataframe_records=[payload_row],
+                )
+                prediction = response.predictions[0]
+                predicted_paid = float(prediction) if not isinstance(prediction, dict) else float(prediction.get("predicted_paid", prediction.get(0, 0)))
+
+                members = float(latest.get("unique_members", 1)) or 1.0
+                predicted_pmpm = predicted_paid / members
+
+                p1, p2, p3 = st.columns(3)
+                p1.metric("Predicted Total Paid", f"${predicted_paid:,.0f}")
+                p2.metric("Predicted PMPM", f"${predicted_pmpm:,.2f}")
+                p3.metric("Segment", f"{rt_lob} / {rt_plan} / {rt_state}")
+                st.caption(f"Scored via endpoint `{ENDPOINT_NAME}` for {rt_month}")
+            except Exception as e:
+                st.error(f"Endpoint error: {e}")
+
+
 
 st.markdown(f"""
 <div class="footer">
