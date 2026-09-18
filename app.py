@@ -259,12 +259,21 @@ trends_df = query(f"""
 if not trends_df.empty:
     trends_df["pmpm"] = pd.to_numeric(trends_df["pmpm"], errors="coerce")
     trends_df["report_month"] = pd.to_datetime(trends_df["report_month"], errors="coerce")
-    fig = px.line(
-        trends_df, x="report_month", y="pmpm", color="line_of_business",
-        labels={"report_month": "Month", "pmpm": "PMPM ($)", "line_of_business": "LOB"},
-    )
-    fig.update_traces(line=dict(width=2.5))
+    fig = go.Figure()
+    for i, lob in enumerate(trends_df["line_of_business"].unique()):
+        lob_data = trends_df[trends_df["line_of_business"] == lob].sort_values("report_month")
+        color = PALETTE[i % len(PALETTE)]
+        fig.add_trace(go.Scatter(
+            x=lob_data["report_month"], y=lob_data["pmpm"],
+            mode="lines+markers", name=str(lob),
+            line=dict(width=3, color=color, shape="spline"),
+            marker=dict(size=6, color="white", line=dict(width=2.5, color=color)),
+            fill="tozeroy",
+            fillcolor=color.replace(")", ", 0.08)") if color.startswith("rgb") else f"rgba({int(color[1:3],16)},{int(color[3:5],16)},{int(color[5:7],16)},0.08)",
+            hovertemplate="<b>%{x|%b %Y}</b><br>PMPM: $%{y:,.2f}<extra>%{fullData.name}</extra>",
+        ))
     _style_fig(fig, 420)
+    fig.update_layout(hovermode="x unified", legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center"))
     st.plotly_chart(fig, use_container_width=True)
 else:
     st.info("No trend data for selected filters.")
@@ -286,14 +295,21 @@ with col_left:
     """)
     if not svc_df.empty:
         svc_df["total_paid"] = pd.to_numeric(svc_df["total_paid"], errors="coerce")
-        fig2 = px.bar(
-            svc_df, x="total_paid", y="procedure_category", orientation="h",
-            labels={"procedure_category": "", "total_paid": "Total Paid ($)"},
-            color_discrete_sequence=[ACCENT],
+        svc_df["claims"] = pd.to_numeric(svc_df["claims"], errors="coerce")
+        fig2 = px.treemap(
+            svc_df, path=["procedure_category"], values="total_paid",
+            color="total_paid",
+            color_continuous_scale=[[0, "#E0F2F1"], [0.4, ACCENT], [0.7, ACCENT2], [1, "#7C3AED"]],
+            hover_data={"total_paid": ":$,.0f", "claims": ":,.0f"},
         )
-        fig2.update_traces(marker=dict(cornerradius=4))
+        fig2.update_traces(
+            texttemplate="<b>%{label}</b><br>$%{value:,.0f}",
+            textfont=dict(size=13, color="white"),
+            marker=dict(cornerradius=6),
+            hovertemplate="<b>%{label}</b><br>Total Paid: $%{value:,.0f}<br>Claims: %{customdata[0]:,.0f}<extra></extra>",
+        )
         _style_fig(fig2, 400)
-        fig2.update_layout(yaxis=dict(categoryorder="total ascending", gridcolor="rgba(0,0,0,0)"))
+        fig2.update_layout(coloraxis_showscale=False, margin=dict(l=5, r=5, t=5, b=5))
         st.plotly_chart(fig2, use_container_width=True)
 
 with col_right:
@@ -308,14 +324,24 @@ with col_right:
     """)
     if not geo_df.empty:
         geo_df["pmpm"] = pd.to_numeric(geo_df["pmpm"], errors="coerce")
-        fig3 = px.bar(
-            geo_df, x="member_state", y="pmpm",
-            labels={"member_state": "State", "pmpm": "PMPM ($)"},
-            color="pmpm",
-            color_continuous_scale=[[0, "#5EEAD4"], [0.5, ACCENT], [1, DANGER]],
+        fig3 = go.Figure(go.Choropleth(
+            locations=geo_df["member_state"],
+            locationmode="USA-states",
+            z=geo_df["pmpm"],
+            colorscale=[[0, "#E0F2F1"], [0.3, "#5EEAD4"], [0.6, ACCENT], [1, DANGER]],
+            colorbar=dict(title="PMPM ($)", thickness=12, len=0.7),
+            hovertemplate="<b>%{location}</b><br>PMPM: $%{z:,.2f}<extra></extra>",
+            marker_line_color="white", marker_line_width=1.5,
+        ))
+        fig3.update_layout(
+            geo=dict(
+                scope="usa", bgcolor="rgba(0,0,0,0)",
+                lakecolor="rgba(0,0,0,0)", landcolor="#F1F5F9",
+                showlakes=True, showframe=False,
+            ),
+            **{k: v for k, v in PLOTLY_LAYOUT.items() if k != "xaxis" and k != "yaxis"},
+            height=400, margin=dict(l=0, r=0, t=10, b=10),
         )
-        fig3.update_traces(marker=dict(cornerradius=4))
-        _style_fig(fig3, 400)
         st.plotly_chart(fig3, use_container_width=True)
 
 
@@ -337,24 +363,46 @@ if not dn_df.empty:
     dn_df["network_leakage"] = pd.to_numeric(dn_df["network_leakage"], errors="coerce")
     d1, d2 = st.columns(2, gap="large")
     with d1:
-        fig4 = px.bar(
-            dn_df, x="line_of_business", y="denial_rate",
-            labels={"line_of_business": "LOB", "denial_rate": "Denial Rate (%)"},
-            color_discrete_sequence=[DANGER],
-        )
-        fig4.update_traces(marker=dict(cornerradius=4))
+        categories = ["Denial Rate", "Network Leakage"]
+        fig4 = go.Figure()
+        for i, row in dn_df.iterrows():
+            lob = row["line_of_business"]
+            color = PALETTE[int(i) % len(PALETTE)]
+            fig4.add_trace(go.Scatterpolar(
+                r=[row["denial_rate"], row["network_leakage"], row["denial_rate"]],
+                theta=categories + [categories[0]],
+                fill="toself", name=str(lob),
+                fillcolor=color.replace(")", ", 0.15)") if color.startswith("rgb") else f"rgba({int(color[1:3],16)},{int(color[3:5],16)},{int(color[5:7],16)},0.15)",
+                line=dict(color=color, width=2.5),
+                hovertemplate="<b>%{theta}</b>: %{r:.1f}%<extra>" + str(lob) + "</extra>",
+            ))
         _style_fig(fig4, 380)
-        fig4.update_layout(title=dict(text="Denial Rate", font=dict(size=14)))
+        fig4.update_layout(
+            polar=dict(
+                radialaxis=dict(visible=True, gridcolor="#E2E8F0", ticksuffix="%"),
+                angularaxis=dict(gridcolor="#E2E8F0"),
+                bgcolor="rgba(0,0,0,0)",
+            ),
+            title=dict(text="Risk Profile by LOB", font=dict(size=14, color=PRIMARY)),
+            legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center"),
+            showlegend=True,
+        )
         st.plotly_chart(fig4, use_container_width=True)
     with d2:
+        dn_melted = dn_df.melt(id_vars="line_of_business", value_vars=["denial_rate", "network_leakage"],
+                                var_name="metric", value_name="pct")
+        dn_melted["metric"] = dn_melted["metric"].map({"denial_rate": "Denial Rate", "network_leakage": "Network Leakage"})
         fig5 = px.bar(
-            dn_df, x="line_of_business", y="network_leakage",
-            labels={"line_of_business": "LOB", "network_leakage": "Network Leakage (%)"},
-            color_discrete_sequence=[WARNING],
+            dn_melted, x="line_of_business", y="pct", color="metric",
+            barmode="group",
+            labels={"line_of_business": "LOB", "pct": "Percentage (%)", "metric": ""},
+            color_discrete_map={"Denial Rate": DANGER, "Network Leakage": WARNING},
         )
-        fig5.update_traces(marker=dict(cornerradius=4))
+        fig5.update_traces(marker=dict(cornerradius=6),
+                           hovertemplate="<b>%{x}</b><br>%{data.name}: %{y:.1f}%<extra></extra>")
         _style_fig(fig5, 380)
-        fig5.update_layout(title=dict(text="Network Leakage", font=dict(size=14)))
+        fig5.update_layout(title=dict(text="Side-by-Side Comparison", font=dict(size=14, color=PRIMARY)),
+                           legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center"))
         st.plotly_chart(fig5, use_container_width=True)
 
 
@@ -378,11 +426,30 @@ if not prov_df.empty:
     prov_df["total_paid"] = pd.to_numeric(prov_df["total_paid"], errors="coerce")
     prov_df["claims"] = pd.to_numeric(prov_df["claims"], errors="coerce")
     prov_df["patients"] = pd.to_numeric(prov_df["patients"], errors="coerce")
-    st.dataframe(
-        prov_df.style.format({"total_paid": "${:,.0f}", "claims": "{:,.0f}", "patients": "{:,.0f}"}),
-        use_container_width=True,
-        hide_index=True,
-    )
+    p1, p2 = st.columns([3, 2], gap="large")
+    with p1:
+        fig_prov = px.scatter(
+            prov_df, x="claims", y="total_paid", size="patients",
+            color="network_status",
+            color_discrete_map={"In-Network": ACCENT, "Out-of-Network": DANGER, "in_network": ACCENT, "out_of_network": DANGER},
+            hover_name="provider_specialty",
+            hover_data={"provider_id": True, "total_paid": ":$,.0f", "claims": ":,.0f", "patients": ":,.0f"},
+            labels={"claims": "Total Claims", "total_paid": "Total Paid ($)", "patients": "Patients", "network_status": "Network"},
+            size_max=45,
+        )
+        fig_prov.update_traces(
+            marker=dict(opacity=0.8, line=dict(width=1, color="white")),
+            hovertemplate="<b>%{hovertext}</b><br>Paid: $%{y:,.0f}<br>Claims: %{x:,.0f}<br>Patients: %{marker.size:,.0f}<extra>%{fullData.name}</extra>",
+        )
+        _style_fig(fig_prov, 420)
+        fig_prov.update_layout(legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center"))
+        st.plotly_chart(fig_prov, use_container_width=True)
+    with p2:
+        st.dataframe(
+            prov_df[["provider_specialty", "network_status", "total_paid", "claims"]]
+            .style.format({"total_paid": "${:,.0f}", "claims": "{:,.0f}"}),
+            use_container_width=True, hide_index=True, height=420,
+        )
 
 # ── 6-Month Cost Forecast ──────────────────────────────────────────
 
@@ -433,27 +500,61 @@ if not forecast_df.empty:
     if not actual_df.empty:
         actual_df["pmpm"] = pd.to_numeric(actual_df["pmpm"], errors="coerce")
         actual_df["month"] = pd.to_datetime(actual_df["month"], errors="coerce")
-        fig_fc = px.line(
-            actual_df, x="month", y="pmpm", color="line_of_business",
-            line_dash="series_type",
-            labels={"month": "Month", "pmpm": "PMPM ($)", "line_of_business": "LOB", "series_type": "Type"},
+        # Build confidence-band forecast chart
+        fig_fc = go.Figure()
+        # Add confidence bands from forecast data
+        fc_band = (
+            forecast_df.groupby("forecast_month", as_index=False)
+            .agg(lower=pd.NamedAgg("lower_bound", "mean"), upper=pd.NamedAgg("upper_bound", "mean"),
+                 pmpm=pd.NamedAgg("predicted_pmpm", "mean"))
+            .sort_values("forecast_month")
         )
-        fig_fc.update_traces(line=dict(width=2.5))
+        fig_fc.add_trace(go.Scatter(
+            x=pd.concat([fc_band["forecast_month"], fc_band["forecast_month"][::-1]]),
+            y=pd.concat([fc_band["upper"], fc_band["lower"][::-1]]),
+            fill="toself", fillcolor="rgba(124,58,237,0.12)",
+            line=dict(color="rgba(0,0,0,0)"), showlegend=True, name="Confidence Band",
+            hoverinfo="skip",
+        ))
+        for stype in ["Actual", "Forecast"]:
+            sdf = actual_df[actual_df["series_type"] == stype].sort_values("month")
+            if sdf.empty:
+                continue
+            is_forecast = stype == "Forecast"
+            fig_fc.add_trace(go.Scatter(
+                x=sdf["month"], y=sdf["pmpm"],
+                mode="lines+markers", name=stype,
+                line=dict(width=3, dash="dot" if is_forecast else "solid",
+                          color="#7C3AED" if is_forecast else ACCENT2, shape="spline"),
+                marker=dict(size=7 if is_forecast else 5,
+                            symbol="diamond" if is_forecast else "circle",
+                            color="#7C3AED" if is_forecast else ACCENT2),
+                hovertemplate="<b>%{x|%b %Y}</b><br>PMPM: $%{y:,.2f}<extra>" + stype + "</extra>",
+            ))
         _style_fig(fig_fc, 450)
-        fig_fc.update_layout(title=dict(text="Actual vs Forecast PMPM by LOB", font=dict(size=14, color=PRIMARY)))
+        fig_fc.update_layout(
+            title=dict(text="Actual vs Forecast PMPM with Confidence Band", font=dict(size=14, color=PRIMARY)),
+            legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center"),
+            hovermode="x unified",
+        )
         st.plotly_chart(fig_fc, use_container_width=True)
 
-    # Forecast by LOB bar + state table
+    # Forecast by LOB donut + state table
     fl, fr = st.columns(2, gap="large")
     with fl:
         lob_fc = forecast_df.groupby("line_of_business", as_index=False)["predicted_paid"].sum()
-        fig_lob = px.bar(
-            lob_fc, x="line_of_business", y="predicted_paid",
-            labels={"line_of_business": "LOB", "predicted_paid": "Projected Total ($)"},
-        )
-        fig_lob.update_traces(marker=dict(cornerradius=4))
+        fig_lob = go.Figure(go.Pie(
+            labels=lob_fc["line_of_business"], values=lob_fc["predicted_paid"],
+            hole=0.55, marker=dict(colors=PALETTE[:len(lob_fc)], line=dict(color="white", width=2)),
+            textinfo="label+percent", textfont=dict(size=12),
+            hovertemplate="<b>%{label}</b><br>$%{value:,.0f}<br>%{percent}<extra></extra>",
+        ))
         _style_fig(fig_lob, 400)
-        fig_lob.update_layout(title=dict(text="Forecasted Cost by LOB", font=dict(size=14)), showlegend=False)
+        fig_lob.update_layout(
+            title=dict(text="Forecasted Cost by LOB", font=dict(size=14, color=PRIMARY)),
+            annotations=[dict(text="Forecast", x=0.5, y=0.5, font_size=16, font_color=TEXT_MUTED, showarrow=False)],
+            showlegend=False, margin=dict(l=20, r=20, t=50, b=20),
+        )
         st.plotly_chart(fig_lob, use_container_width=True)
     with fr:
         state_fc = (
