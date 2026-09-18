@@ -30,26 +30,26 @@ def data_source_label() -> str:
         return f"{PGDATABASE}.{SCHEMA}"
     return f"{CATALOG}.{SCHEMA}"
 
-PRIMARY = "#0C2340"
-ACCENT  = "#00897B"
-ACCENT2 = "#1565C0"
-SURFACE = "#F7F9FC"
-TEXT_MUTED = "#64748B"
-SUCCESS = "#16A34A"
-WARNING = "#F59E0B"
-DANGER  = "#DC2626"
+PRIMARY = "#1A1A1A"
+ACCENT  = "#DC2626"
+ACCENT2 = "#B91C1C"
+SURFACE = "#0A0A0A"
+TEXT_MUTED = "#A3A3A3"
+SUCCESS = "#22C55E"
+WARNING = "#FBBF24"
+DANGER  = "#EF4444"
 
-PALETTE = [ACCENT, ACCENT2, "#7C3AED", "#E11D48", WARNING, "#0891B2", "#65A30D", "#C2410C"]
+PALETTE = ["#DC2626", "#EF4444", "#F87171", "#FBBF24", "#F59E0B", "#FB923C", "#A3A3A3", "#D4D4D4"]
 
 PLOTLY_LAYOUT = dict(
-    font=dict(family="Inter, -apple-system, BlinkMacSystemFont, sans-serif", color=PRIMARY),
+    font=dict(family="Inter, -apple-system, BlinkMacSystemFont, sans-serif", color="#E5E5E5"),
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(0,0,0,0)",
     margin=dict(l=20, r=20, t=40, b=20),
-    xaxis=dict(showgrid=False),
-    yaxis=dict(gridcolor="#E2E8F0", gridwidth=1),
+    xaxis=dict(showgrid=False, color="#A3A3A3"),
+    yaxis=dict(gridcolor="#2A2A2A", gridwidth=1, color="#A3A3A3"),
     colorway=PALETTE,
-    hoverlabel=dict(bgcolor="white", font_size=13, font_color=PRIMARY),
+    hoverlabel=dict(bgcolor="#1A1A1A", font_size=13, font_color="#E5E5E5", bordercolor="#DC2626"),
 )
 
 st.set_page_config(
@@ -65,29 +65,28 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 html, body, [class*="st-"] { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-.stApp { background: #F7F9FC; }
-section[data-testid="stSidebar"] { background: #0C2340; }
-section[data-testid="stSidebar"] * { color: #E2E8F0 !important; }
-section[data-testid="stSidebar"] .stMultiSelect label { color: #94A3B8 !important; font-weight: 500; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; }
-section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.12); }
-.hero { background: linear-gradient(135deg, #0C2340 0%, #1565C0 100%); border-radius: 12px; padding: 2rem 2.5rem; margin-bottom: 1.5rem; }
+.stApp { background: #0A0A0A; color: #E5E5E5; }
+section[data-testid="stSidebar"] { background: #111111; border-right: 1px solid #DC2626; }
+section[data-testid="stSidebar"] * { color: #E5E5E5 !important; }
+section[data-testid="stSidebar"] .stMultiSelect label { color: #A3A3A3 !important; font-weight: 500; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; }
+section[data-testid="stSidebar"] hr { border-color: rgba(220,38,38,0.3); }
+.hero { background: linear-gradient(135deg, #1A1A1A 0%, #2A0A0A 50%, #DC2626 100%); border-radius: 12px; padding: 2rem 2.5rem; margin-bottom: 1.5rem; border: 1px solid rgba(220,38,38,0.3); }
 .hero h1 { color: white; font-size: 2rem; font-weight: 700; margin: 0 0 0.25rem 0; }
-.hero p  { color: #94A3B8; font-size: 0.95rem; margin: 0; }
-.hero .badge { display: inline-block; background: rgba(0,137,123,0.25); color: #5EEAD4; font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.7rem; border-radius: 999px; margin-top: 0.5rem; letter-spacing: 0.03em; }
+.hero p  { color: #A3A3A3; font-size: 0.95rem; margin: 0; }
 .kpi-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
-.kpi-card { flex: 1 1 140px; background: white; border-radius: 10px; padding: 1.2rem 1.4rem; border-left: 4px solid #00897B; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-.kpi-card.blue   { border-left-color: #1565C0; }
-.kpi-card.purple { border-left-color: #7C3AED; }
+.kpi-card { flex: 1 1 140px; background: #141414; border-radius: 10px; padding: 1.2rem 1.4rem; border-left: 4px solid #DC2626; box-shadow: 0 1px 6px rgba(220,38,38,0.1); }
+.kpi-card.blue   { border-left-color: #EF4444; }
+.kpi-card.purple { border-left-color: #F87171; }
 .kpi-card.red    { border-left-color: #DC2626; }
-.kpi-card.amber  { border-left-color: #F59E0B; }
-.kpi-card .label { font-size: 0.75rem; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; }
-.kpi-card .value { font-size: 1.55rem; font-weight: 700; color: #0C2340; line-height: 1.1; }
-.section-card { background: white; border-radius: 12px; padding: 1.5rem 1.75rem 1.25rem; margin-bottom: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-.section-card h3 { color: #0C2340; font-size: 1.1rem; font-weight: 600; margin: 0 0 0.2rem 0; }
-.section-card .subtitle { color: #64748B; font-size: 0.82rem; margin-bottom: 1rem; }
+.kpi-card.amber  { border-left-color: #FBBF24; }
+.kpi-card .label { font-size: 0.75rem; font-weight: 600; color: #A3A3A3; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; }
+.kpi-card .value { font-size: 1.55rem; font-weight: 700; color: #F5F5F5; line-height: 1.1; }
+.section-card { background: #141414; border-radius: 12px; padding: 1.5rem 1.75rem 1.25rem; margin-bottom: 1.25rem; box-shadow: 0 1px 6px rgba(0,0,0,0.3); border: 1px solid #2A2A2A; }
+.section-card h3 { color: #F5F5F5; font-size: 1.1rem; font-weight: 600; margin: 0 0 0.2rem 0; }
+.section-card .subtitle { color: #A3A3A3; font-size: 0.82rem; margin-bottom: 1rem; }
 [data-testid="stDataFrame"] { border-radius: 8px; overflow: hidden; }
-header[data-testid="stHeader"] { background: transparent; }
-.footer { text-align: center; color: #94A3B8; font-size: 0.78rem; padding: 2rem 0 1rem; border-top: 1px solid #E2E8F0; margin-top: 2rem; }
+header[data-testid="stHeader"] { background: #0A0A0A; }
+.footer { text-align: center; color: #737373; font-size: 0.78rem; padding: 2rem 0 1rem; border-top: 1px solid #2A2A2A; margin-top: 2rem; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -302,7 +301,7 @@ with col_left:
         fig2 = px.treemap(
             svc_df, path=["procedure_category"], values="total_paid",
             color="total_paid",
-            color_continuous_scale=[[0, "#E0F2F1"], [0.4, ACCENT], [0.7, ACCENT2], [1, "#7C3AED"]],
+            color_continuous_scale=[[0, "#1A1A1A"], [0.3, "#7F1D1D"], [0.6, "#DC2626"], [1, "#FBBF24"]],
             hover_data={"total_paid": ":$,.0f", "claims": ":,.0f"},
         )
         fig2.update_traces(
@@ -331,15 +330,15 @@ with col_right:
             locations=geo_df["member_state"],
             locationmode="USA-states",
             z=geo_df["pmpm"],
-            colorscale=[[0, "#E0F2F1"], [0.3, "#5EEAD4"], [0.6, ACCENT], [1, DANGER]],
-            colorbar=dict(title="PMPM ($)", thickness=12, len=0.7),
+            colorscale=[[0, "#1A1A1A"], [0.3, "#7F1D1D"], [0.6, "#DC2626"], [1, "#EF4444"]],
+            colorbar=dict(title="PMPM ($)", thickness=12, len=0.7, tickfont=dict(color="#A3A3A3"), titlefont=dict(color="#A3A3A3")),
             hovertemplate="<b>%{location}</b><br>PMPM: $%{z:,.2f}<extra></extra>",
-            marker_line_color="white", marker_line_width=1.5,
+            marker_line_color="#2A2A2A", marker_line_width=1.5,
         ))
         fig3.update_layout(
             geo=dict(
                 scope="usa", bgcolor="rgba(0,0,0,0)",
-                lakecolor="rgba(0,0,0,0)", landcolor="#F1F5F9",
+                lakecolor="rgba(0,0,0,0)", landcolor="#1A1A1A",
                 showlakes=True, showframe=False,
             ),
             **{k: v for k, v in PLOTLY_LAYOUT.items() if k != "xaxis" and k != "yaxis"},
@@ -434,7 +433,7 @@ if not prov_df.empty:
         fig_prov = px.scatter(
             prov_df, x="claims", y="total_paid", size="patients",
             color="network_status",
-            color_discrete_map={"In-Network": ACCENT, "Out-of-Network": DANGER, "in_network": ACCENT, "out_of_network": DANGER},
+            color_discrete_map={"In-Network": "#FBBF24", "Out-of-Network": "#DC2626", "in_network": "#FBBF24", "out_of_network": "#DC2626"},
             hover_name="provider_specialty",
             hover_data={"provider_id": True, "total_paid": ":$,.0f", "claims": ":,.0f", "patients": ":,.0f"},
             labels={"claims": "Total Claims", "total_paid": "Total Paid ($)", "patients": "Patients", "network_status": "Network"},
@@ -515,7 +514,7 @@ if not forecast_df.empty:
         fig_fc.add_trace(go.Scatter(
             x=pd.concat([fc_band["forecast_month"], fc_band["forecast_month"][::-1]]),
             y=pd.concat([fc_band["upper"], fc_band["lower"][::-1]]),
-            fill="toself", fillcolor="rgba(124,58,237,0.12)",
+            fill="toself", fillcolor="rgba(220,38,38,0.15)",
             line=dict(color="rgba(0,0,0,0)"), showlegend=True, name="Confidence Band",
             hoverinfo="skip",
         ))
@@ -528,10 +527,10 @@ if not forecast_df.empty:
                 x=sdf["month"], y=sdf["pmpm"],
                 mode="lines+markers", name=stype,
                 line=dict(width=3, dash="dot" if is_forecast else "solid",
-                          color="#7C3AED" if is_forecast else ACCENT2, shape="spline"),
+                          color="#FBBF24" if is_forecast else "#DC2626", shape="spline"),
                 marker=dict(size=7 if is_forecast else 5,
                             symbol="diamond" if is_forecast else "circle",
-                            color="#7C3AED" if is_forecast else ACCENT2),
+                            color="#FBBF24" if is_forecast else "#DC2626"),
                 hovertemplate="<b>%{x|%b %Y}</b><br>PMPM: $%{y:,.2f}<extra>" + stype + "</extra>",
             ))
         _style_fig(fig_fc, 450)
