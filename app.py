@@ -39,7 +39,7 @@ SUCCESS = "#16A34A"
 WARNING = "#F59E0B"
 DANGER  = "#DC2626"
 
-PALETTE = ["#0077B6", "#D62828", "#7209B7", "#E85D04", "#2D6A4F", "#6A040F", "#023E8A", "#9D4EDD"]
+PALETTE = [ACCENT, ACCENT2, "#7C3AED", "#E11D48", WARNING, "#0891B2", "#65A30D", "#C2410C"]
 
 PLOTLY_LAYOUT = dict(
     font=dict(family="Inter, -apple-system, BlinkMacSystemFont, sans-serif", color=PRIMARY),
@@ -515,7 +515,7 @@ if not forecast_df.empty:
         fig_fc.add_trace(go.Scatter(
             x=pd.concat([fc_band["forecast_month"], fc_band["forecast_month"][::-1]]),
             y=pd.concat([fc_band["upper"], fc_band["lower"][::-1]]),
-            fill="toself", fillcolor="rgba(114,9,183,0.18)",
+            fill="toself", fillcolor="rgba(124,58,237,0.12)",
             line=dict(color="rgba(0,0,0,0)"), showlegend=True, name="Confidence Band",
             hoverinfo="skip",
         ))
@@ -528,10 +528,10 @@ if not forecast_df.empty:
                 x=sdf["month"], y=sdf["pmpm"],
                 mode="lines+markers", name=stype,
                 line=dict(width=3, dash="dot" if is_forecast else "solid",
-                          color="#7209B7" if is_forecast else "#0077B6", shape="spline"),
+                          color="#7C3AED" if is_forecast else ACCENT2, shape="spline"),
                 marker=dict(size=7 if is_forecast else 5,
                             symbol="diamond" if is_forecast else "circle",
-                            color="#7209B7" if is_forecast else "#0077B6"),
+                            color="#7C3AED" if is_forecast else ACCENT2),
                 hovertemplate="<b>%{x|%b %Y}</b><br>PMPM: $%{y:,.2f}<extra>" + stype + "</extra>",
             ))
         _style_fig(fig_fc, 450)
@@ -549,7 +549,7 @@ if not forecast_df.empty:
         fig_lob = go.Figure(go.Pie(
             labels=lob_fc["line_of_business"], values=lob_fc["predicted_paid"],
             hole=0.55, marker=dict(colors=PALETTE[:len(lob_fc)], line=dict(color="white", width=2)),
-            textinfo="label+percent", textfont=dict(size=13, color=PRIMARY),
+            textinfo="label+percent", textfont=dict(size=12),
             hovertemplate="<b>%{label}</b><br>$%{value:,.0f}<br>%{percent}<extra></extra>",
         ))
         _style_fig(fig_lob, 400)
