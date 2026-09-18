@@ -179,6 +179,79 @@ def _style_fig(fig, height=400):
     return fig
 
 
+# ── Genie helpers ────────────────────────────────────────────────────
+
+def genie_start_conversation(question: str) -> tuple:
+    """Start a new Genie conversation. Returns (conversation_id, message_id)."""
+    w = _client()
+    resp = w.api_client.do(
+        "POST",
+        f"/api/2.0/genie/spaces/{GENIE_SPACE_ID}/start-conversation",
+        body={"content": question},
+    )
+    return resp["conversation_id"], resp["message_id"]
+
+
+def genie_follow_up(conversation_id: str, question: str) -> str:
+    """Send a follow-up message. Returns the new message_id."""
+    w = _client()
+    resp = w.api_client.do(
+        "POST",
+        f"/api/2.0/genie/spaces/{GENIE_SPACE_ID}/conversations/{conversation_id}/messages",
+        body={"content": question},
+    )
+    return resp["id"]
+
+
+def genie_poll_result(conversation_id: str, message_id: str, timeout: int = 90) -> dict:
+    """Poll until the Genie message completes. Returns the full message dict."""
+    w = _client()
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        r = w.api_client.do(
+            "GET",
+            f"/api/2.0/genie/spaces/{GENIE_SPACE_ID}/conversations/{conversation_id}/messages/{message_id}",
+        )
+        status = r.get("status", "UNKNOWN")
+        if status in ("COMPLETED", "FAILED", "QUERY_RESULT_EXPIRED", "CANCELLED"):
+            return r
+        time.sleep(2)
+    return {"status": "TIMEOUT", "attachments": []}
+
+
+def genie_parse_response(msg: dict) -> list:
+    """Parse a Genie message into display-ready parts.
+    Returns a list of dicts: {type: 'text'|'sql'|'table'|'error', content: ...}
+    """
+    parts = []
+    status = msg.get("status", "UNKNOWN")
+    if status in ("FAILED", "CANCELLED", "TIMEOUT"):
+        parts.append({"type": "error", "content": f"Genie returned status: {status}"})
+        return parts
+
+    for att in msg.get("attachments", []):
+        if "text" in att:
+            txt = att["text"].get("content", "")
+            if txt.strip():
+                parts.append({"type": "text", "content": txt})
+        if "query" in att:
+            q = att["query"]
+            sql = q.get("query", "")
+            desc = q.get("description", "")
+            if sql.strip():
+                parts.append({"type": "sql", "content": sql, "description": desc})
+            columns = q.get("columns", [])
+            data = q.get("data", [])
+            if columns and data:
+                col_names = [c.get("name", f"col_{i}") for i, c in enumerate(columns)]
+                df = pd.DataFrame(data, columns=col_names)
+                parts.append({"type": "table", "content": df})
+
+    if not parts:
+        parts.append({"type": "text", "content": "Genie returned an empty response."})
+    return parts
+
+
 # ── Sidebar ─────────────────────────────────────────────────
 
 st.sidebar.markdown("### \U0001f3e5 Luminos Health")
