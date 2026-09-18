@@ -97,6 +97,9 @@ header[data-testid="stHeader"] { background: #F8F9FB; }
 .genie-header p { color: #CBD5E1; font-size: 0.88rem; margin: 0; }
 [data-testid="stChatMessage"] { background: white; border-radius: 10px; border: 1px solid #E0E4E8; margin-bottom: 0.5rem; padding: 0.75rem 1rem; }
 .genie-sql { background: #0B1D3A; color: #CBD5E1; border-radius: 8px; padding: 1rem; font-size: 0.82rem; overflow-x: auto; }
+[data-testid="stBaseButton-secondary"] { background: #0B1D3A !important; color: white !important; border: 1px solid #1E3A5F !important; border-radius: 8px !important; }
+[data-testid="stBaseButton-secondary"]:hover { background: #1E3A5F !important; color: white !important; }
+[data-testid="stBaseButton-secondary"] p { color: white !important; }
 </style>
 """, unsafe_allow_html=True)
 
