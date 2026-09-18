@@ -176,17 +176,20 @@ st.sidebar.markdown("###### FILTERS")
 
 @st.cache_data(ttl=600)
 def load_filter_options():
-    return query(f"""
+    df = query(f"""
         SELECT DISTINCT line_of_business, plan_type, member_state
         FROM {table_ref('tcoc_pmpm_trends')}
         ORDER BY 1, 2, 3
     """)
+    if df.empty:
+        st.sidebar.warning("Could not load filter options — check data connection.")
+    return df
 
 
 filter_df = load_filter_options()
-lob_opts = sorted(filter_df["line_of_business"].dropna().unique()) if not filter_df.empty else []
-plan_opts = sorted(filter_df["plan_type"].dropna().unique()) if not filter_df.empty else []
-state_opts = sorted(filter_df["member_state"].dropna().unique()) if not filter_df.empty else []
+lob_opts = sorted(filter_df["line_of_business"].dropna().unique().tolist()) if not filter_df.empty else []
+plan_opts = sorted(filter_df["plan_type"].dropna().unique().tolist()) if not filter_df.empty else []
+state_opts = sorted(filter_df["member_state"].dropna().unique().tolist()) if not filter_df.empty else []
 
 selected_lob = st.sidebar.multiselect("Line of Business", lob_opts, default=lob_opts)
 selected_plan = st.sidebar.multiselect("Plan Type", plan_opts, default=plan_opts)
@@ -216,7 +219,6 @@ st.markdown("""
 <div class="hero">
     <h1>Total Cost of Care</h1>
     <p>Real-time population health analytics across all lines of business</p>
-    <span class="badge">\u26A1 LIVE &mdash; auto-refreshes every 5 min</span>
 </div>
 """, unsafe_allow_html=True)
 
