@@ -235,7 +235,19 @@ def genie_parse_response(msg: dict) -> list:
     parts = []
     status = msg.get("status", "UNKNOWN")
     if status in ("FAILED", "CANCELLED", "TIMEOUT"):
-        parts.append({"type": "error", "content": f"Genie returned status: {status}"})
+        error_detail = ""
+        # Extract error from attachments or top-level error field
+        if "error" in msg:
+            error_detail = str(msg["error"])
+        for att in msg.get("attachments", []):
+            if "query" in att and "error" in att["query"]:
+                error_detail = str(att["query"]["error"])
+            if "text" in att:
+                txt = att["text"].get("content", "")
+                if txt.strip():
+                    error_detail = txt
+        detail_msg = f" — {error_detail}" if error_detail else ""
+        parts.append({"type": "error", "content": f"Genie returned status: {status}{detail_msg}"})
         return parts
 
     for att in msg.get("attachments", []):
@@ -383,7 +395,9 @@ if "Genie" in app_view:
                     result = genie_poll_result(conv_id, msg_id)
                     parts = genie_parse_response(result)
                 except Exception as e:
-                    parts = [{"type": "error", "content": f"Genie API error: {e}"}]
+                    import traceback
+                    tb = traceback.format_exc()
+                    parts = [{"type": "error", "content": f"Genie API error: {e}\n\n```\n{tb}\n```"}]
 
             for part in parts:
                 if part["type"] == "text":
