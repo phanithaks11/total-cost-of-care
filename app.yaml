@@ -1,0 +1,21 @@
+command:
+  - python
+  - app.py
+
+env:
+  - name: LAKEBASE_HOST
+    value: "ep-summer-tooth-d8ja2srp.database.us-east-2.cloud.databricks.com"
+  - name: LAKEBASE_DATABASE
+    value: "databricks_postgres"
+  - name: LAKEBASE_SCHEMA
+    value: "tcoc_gold"
+  - name: LAKEBASE_ENDPOINT
+    value: "projects/tcoc-app/branches/production/endpoints/primary"
+
+resources:
+  - name: lakebase-tcoc
+    lakebase:
+      permission: CAN_CONNECT_AND_CREATE
+      postgres:
+        branch: projects/tcoc-app/branches/production
+        database: databricks-postgres
