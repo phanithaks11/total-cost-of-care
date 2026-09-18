@@ -81,11 +81,14 @@ section[data-testid="stSidebar"] hr { border-color: rgba(220,38,38,0.3); }
 .kpi-card.amber  { border-left-color: #FBBF24; }
 .kpi-card .label { font-size: 0.75rem; font-weight: 600; color: #A3A3A3; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; }
 .kpi-card .value { font-size: 1.55rem; font-weight: 700; color: #F5F5F5; line-height: 1.1; }
-.section-card { background: #141414; border-radius: 12px; padding: 1.5rem 1.75rem 1.25rem; margin-bottom: 1.25rem; box-shadow: 0 1px 6px rgba(0,0,0,0.3); border: 1px solid #2A2A2A; }
+.section-card { background: #141414; border-radius: 12px; padding: 1.5rem 1.75rem 1.25rem; margin-top: 1.5rem; margin-bottom: 0.5rem; box-shadow: 0 1px 6px rgba(0,0,0,0.3); border: 1px solid #2A2A2A; }
 .section-card h3 { color: #F5F5F5; font-size: 1.1rem; font-weight: 600; margin: 0 0 0.2rem 0; }
-.section-card .subtitle { color: #A3A3A3; font-size: 0.82rem; margin-bottom: 1rem; }
+.section-card .subtitle { color: #A3A3A3; font-size: 0.82rem; margin-bottom: 0.5rem; }
 [data-testid="stDataFrame"] { border-radius: 8px; overflow: hidden; }
+[data-testid="stDataFrame"] th { background: #1A1A1A !important; color: #E5E5E5 !important; }
+[data-testid="stDataFrame"] td { background: #111111 !important; color: #D4D4D4 !important; }
 header[data-testid="stHeader"] { background: #0A0A0A; }
+[data-testid="stPlotlyChart"] { margin-top: -0.5rem; }
 .footer { text-align: center; color: #737373; font-size: 0.78rem; padding: 2rem 0 1rem; border-top: 1px solid #2A2A2A; margin-top: 2rem; }
 </style>
 """, unsafe_allow_html=True)
@@ -335,13 +338,14 @@ with col_right:
             hovertemplate="<b>%{location}</b><br>PMPM: $%{z:,.2f}<extra></extra>",
             marker_line_color="#2A2A2A", marker_line_width=1.5,
         ))
+        _choro_layout = {k: v for k, v in PLOTLY_LAYOUT.items() if k not in ("xaxis", "yaxis", "margin")}
         fig3.update_layout(
             geo=dict(
                 scope="usa", bgcolor="rgba(0,0,0,0)",
                 lakecolor="rgba(0,0,0,0)", landcolor="#1A1A1A",
                 showlakes=True, showframe=False,
             ),
-            **{k: v for k, v in PLOTLY_LAYOUT.items() if k != "xaxis" and k != "yaxis"},
+            **_choro_layout,
             height=400, margin=dict(l=0, r=0, t=10, b=10),
         )
         st.plotly_chart(fig3, use_container_width=True)
