@@ -1,4 +1,5 @@
 import os
+import time
 import uuid
 
 import psycopg2
@@ -10,6 +11,7 @@ from databricks.sdk import WorkspaceClient
 
 CATALOG = "phanitha_test_catalog"
 SCHEMA = os.environ.get("LAKEBASE_SCHEMA", "tcoc_gold")
+GENIE_SPACE_ID = "01f1b2b3e3091d65888a5614977260dd"
 
 PGHOST = os.environ.get("PGHOST") or os.environ.get("LAKEBASE_HOST")
 PGDATABASE = os.environ.get("PGDATABASE") or os.environ.get("LAKEBASE_DATABASE", "databricks_postgres")
@@ -90,6 +92,11 @@ section[data-testid="stSidebar"] hr { border-color: rgba(74,144,217,0.25); }
 header[data-testid="stHeader"] { background: #F8F9FB; }
 [data-testid="stPlotlyChart"] { margin-top: -0.5rem; }
 .footer { text-align: center; color: #1A1A1A; font-size: 0.78rem; padding: 2rem 0 1rem; border-top: 1px solid #E0E4E8; margin-top: 2rem; }
+.genie-header { background: linear-gradient(135deg, #0B1D3A 0%, #1E3A5F 60%, #4A90D9 100%); border-radius: 12px; padding: 1.5rem 2rem; margin-bottom: 1rem; }
+.genie-header h2 { color: white; font-size: 1.4rem; font-weight: 700; margin: 0 0 0.25rem 0; }
+.genie-header p { color: #CBD5E1; font-size: 0.88rem; margin: 0; }
+[data-testid="stChatMessage"] { background: white; border-radius: 10px; border: 1px solid #E0E4E8; margin-bottom: 0.5rem; padding: 0.75rem 1rem; }
+.genie-sql { background: #0B1D3A; color: #CBD5E1; border-radius: 8px; padding: 1rem; font-size: 0.82rem; overflow-x: auto; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -199,6 +206,8 @@ selected_plan = st.sidebar.multiselect("Plan Type", plan_opts, default=plan_opts
 selected_state = st.sidebar.multiselect("State", state_opts, default=state_opts)
 
 st.sidebar.divider()
+app_view = st.sidebar.radio("Navigate", ["\U0001f4ca Dashboard", "\U0001f52e Ask Genie"], label_visibility="collapsed")
+st.sidebar.divider()
 st.sidebar.caption("Powered by Databricks")
 
 
@@ -214,6 +223,105 @@ def where_clause(has_plan_type=True, has_member_state=True):
         vals = ", ".join(f"'{v}'" for v in selected_state)
         parts.append(f"member_state IN ({vals})")
     return " AND ".join(parts) if parts else "1=1"
+
+
+# ── Genie Chat View ──────────────────────────────────────────────────
+
+if "Genie" in app_view:
+
+    st.markdown("""
+    <div class="genie-header">
+        <h2>\U0001f52e Ask Genie</h2>
+        <p>Ask natural-language questions about your Total Cost of Care data</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Session state
+    if "genie_messages" not in st.session_state:
+        st.session_state.genie_messages = []
+    if "genie_conversation_id" not in st.session_state:
+        st.session_state.genie_conversation_id = None
+
+    # Suggested questions
+    suggestions = [
+        "What is the average PMPM by line of business?",
+        "Which state has the highest total cost?",
+        "Show me denial rates by plan type",
+        "Top 5 most expensive service categories?",
+    ]
+    if not st.session_state.genie_messages:
+        st.markdown("**Try asking:**")
+        scols = st.columns(2, gap="small")
+        for idx, s in enumerate(suggestions):
+            with scols[idx % 2]:
+                if st.button(s, key=f"sug_{idx}", use_container_width=True):
+                    st.session_state.genie_pending = s
+                    st.rerun()
+
+    # Render conversation history
+    for msg in st.session_state.genie_messages:
+        avatar = "\U0001f464" if msg["role"] == "user" else "\U0001f52e"
+        with st.chat_message(msg["role"], avatar=avatar):
+            for part in msg.get("parts", []):
+                if part["type"] == "text":
+                    st.markdown(part["content"])
+                elif part["type"] == "sql":
+                    if part.get("description"):
+                        st.caption(part["description"])
+                    st.code(part["content"], language="sql")
+                elif part["type"] == "table":
+                    st.dataframe(part["content"], use_container_width=True, hide_index=True)
+                elif part["type"] == "error":
+                    st.error(part["content"])
+
+    # Handle pending question from suggestion buttons
+    pending = st.session_state.pop("genie_pending", None)
+    user_input = st.chat_input("Ask about total cost of care...")
+    question = pending or user_input
+
+    if question:
+        # Show user message
+        st.session_state.genie_messages.append({"role": "user", "parts": [{"type": "text", "content": question}]})
+        with st.chat_message("user", avatar="\U0001f464"):
+            st.markdown(question)
+
+        # Call Genie API
+        with st.chat_message("assistant", avatar="\U0001f52e"):
+            with st.spinner("Genie is thinking..."):
+                try:
+                    if st.session_state.genie_conversation_id is None:
+                        conv_id, msg_id = genie_start_conversation(question)
+                        st.session_state.genie_conversation_id = conv_id
+                    else:
+                        conv_id = st.session_state.genie_conversation_id
+                        msg_id = genie_follow_up(conv_id, question)
+                    result = genie_poll_result(conv_id, msg_id)
+                    parts = genie_parse_response(result)
+                except Exception as e:
+                    parts = [{"type": "error", "content": f"Genie API error: {e}"}]
+
+            for part in parts:
+                if part["type"] == "text":
+                    st.markdown(part["content"])
+                elif part["type"] == "sql":
+                    if part.get("description"):
+                        st.caption(part["description"])
+                    st.code(part["content"], language="sql")
+                elif part["type"] == "table":
+                    st.dataframe(part["content"], use_container_width=True, hide_index=True)
+                elif part["type"] == "error":
+                    st.error(part["content"])
+
+            st.session_state.genie_messages.append({"role": "assistant", "parts": parts})
+
+    # Reset button
+    if st.session_state.genie_messages:
+        if st.button("\U0001f504 New conversation", key="genie_reset"):
+            st.session_state.genie_messages = []
+            st.session_state.genie_conversation_id = None
+            st.rerun()
+
+    st.stop()
 
 
 # ── Header ──────────────────────────────────────────────────────────
