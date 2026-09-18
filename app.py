@@ -95,8 +95,17 @@ header[data-testid="stHeader"] { background: #F8F9FB; }
 .genie-header { background: linear-gradient(135deg, #0B1D3A 0%, #1E3A5F 60%, #4A90D9 100%); border-radius: 12px; padding: 1.5rem 2rem; margin-bottom: 1rem; }
 .genie-header h2 { color: white; font-size: 1.4rem; font-weight: 700; margin: 0 0 0.25rem 0; }
 .genie-header p { color: #CBD5E1; font-size: 0.88rem; margin: 0; }
-[data-testid="stChatMessage"] { background: white; border-radius: 10px; border: 1px solid #E0E4E8; margin-bottom: 0.5rem; padding: 0.75rem 1rem; }
+[data-testid="stChatMessage"] { background: white; border-radius: 10px; border: 1px solid #E0E4E8; margin-bottom: 0.5rem; padding: 0.75rem 1rem; color: #0B1D3A !important; }
+[data-testid="stChatMessage"] p, [data-testid="stChatMessage"] span, [data-testid="stChatMessage"] li, [data-testid="stChatMessage"] div { color: #0B1D3A !important; }
+[data-testid="stChatMessage"] strong { color: #0B1D3A !important; }
+[data-testid="stChatMessage"] code { color: #0B1D3A !important; }
+[data-testid="stChatInput"] input { color: #0B1D3A !important; }
+[data-testid="stChatInput"] textarea { color: #0B1D3A !important; }
+[data-testid="stMarkdown"] p { color: #0B1D3A; }
+[data-testid="stAlert"] p { color: #0B1D3A !important; }
+[data-testid="stCaption"] { color: #3D5A80 !important; }
 .genie-sql { background: #0B1D3A; color: #CBD5E1; border-radius: 8px; padding: 1rem; font-size: 0.82rem; overflow-x: auto; }
+.genie-sql pre { color: #CBD5E1 !important; }
 [data-testid="stBaseButton-secondary"] { background: #0B1D3A !important; color: white !important; border: 1px solid #1E3A5F !important; border-radius: 8px !important; }
 [data-testid="stBaseButton-secondary"]:hover { background: #1E3A5F !important; color: white !important; }
 [data-testid="stBaseButton-secondary"] p { color: white !important; }
@@ -177,6 +186,79 @@ def _style_fig(fig, height=400):
     """Apply the unified Luminos theme to any Plotly figure."""
     fig.update_layout(**PLOTLY_LAYOUT, height=height)
     return fig
+
+
+# ── Genie helpers ────────────────────────────────────────────────────
+
+def genie_start_conversation(question: str) -> tuple:
+    """Start a new Genie conversation. Returns (conversation_id, message_id)."""
+    w = _client()
+    resp = w.api_client.do(
+        "POST",
+        f"/api/2.0/genie/spaces/{GENIE_SPACE_ID}/start-conversation",
+        body={"content": question},
+    )
+    return resp["conversation_id"], resp["message_id"]
+
+
+def genie_follow_up(conversation_id: str, question: str) -> str:
+    """Send a follow-up message. Returns the new message_id."""
+    w = _client()
+    resp = w.api_client.do(
+        "POST",
+        f"/api/2.0/genie/spaces/{GENIE_SPACE_ID}/conversations/{conversation_id}/messages",
+        body={"content": question},
+    )
+    return resp["id"]
+
+
+def genie_poll_result(conversation_id: str, message_id: str, timeout: int = 90) -> dict:
+    """Poll until the Genie message completes. Returns the full message dict."""
+    w = _client()
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        r = w.api_client.do(
+            "GET",
+            f"/api/2.0/genie/spaces/{GENIE_SPACE_ID}/conversations/{conversation_id}/messages/{message_id}",
+        )
+        status = r.get("status", "UNKNOWN")
+        if status in ("COMPLETED", "FAILED", "QUERY_RESULT_EXPIRED", "CANCELLED"):
+            return r
+        time.sleep(2)
+    return {"status": "TIMEOUT", "attachments": []}
+
+
+def genie_parse_response(msg: dict) -> list:
+    """Parse a Genie message into display-ready parts.
+    Returns a list of dicts: {type: 'text'|'sql'|'table'|'error', content: ...}
+    """
+    parts = []
+    status = msg.get("status", "UNKNOWN")
+    if status in ("FAILED", "CANCELLED", "TIMEOUT"):
+        parts.append({"type": "error", "content": f"Genie returned status: {status}"})
+        return parts
+
+    for att in msg.get("attachments", []):
+        if "text" in att:
+            txt = att["text"].get("content", "")
+            if txt.strip():
+                parts.append({"type": "text", "content": txt})
+        if "query" in att:
+            q = att["query"]
+            sql = q.get("query", "")
+            desc = q.get("description", "")
+            if sql.strip():
+                parts.append({"type": "sql", "content": sql, "description": desc})
+            columns = q.get("columns", [])
+            data = q.get("data", [])
+            if columns and data:
+                col_names = [c.get("name", f"col_{i}") for i, c in enumerate(columns)]
+                df = pd.DataFrame(data, columns=col_names)
+                parts.append({"type": "table", "content": df})
+
+    if not parts:
+        parts.append({"type": "text", "content": "Genie returned an empty response."})
+    return parts
 
 
 # ── Sidebar ─────────────────────────────────────────────────
