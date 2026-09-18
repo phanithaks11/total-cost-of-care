@@ -15,7 +15,8 @@ PGHOST = os.environ.get("PGHOST") or os.environ.get("LAKEBASE_HOST")
 PGDATABASE = os.environ.get("PGDATABASE") or os.environ.get("LAKEBASE_DATABASE", "databricks_postgres")
 PGUSER = os.environ.get("PGUSER")
 PGPORT = int(os.environ.get("PGPORT", "5432"))
-USE_LAKEBASE = bool(PGHOST and PGDATABASE and PGUSER)
+# Only use Lakebase when explicitly opted in — the tcoc tables live in Unity Catalog
+USE_LAKEBASE = os.environ.get("USE_LAKEBASE", "false").lower() == "true"
 
 
 def table_ref(table_name: str) -> str:

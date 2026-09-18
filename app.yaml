@@ -8,6 +8,10 @@ command:
   - "0.0.0.0"
 
 env:
+  - name: DATABRICKS_WAREHOUSE_ID
+    value: "7ee75168ca5e635c"
+  - name: USE_LAKEBASE
+    value: "false"
   - name: LAKEBASE_HOST
     value: "ep-summer-tooth-d8ja2srp.database.us-east-2.cloud.databricks.com"
   - name: LAKEBASE_DATABASE
