@@ -34,7 +34,7 @@ PRIMARY = "#0B1D3A"
 ACCENT  = "#4A90D9"
 ACCENT2 = "#1E3A5F"
 SURFACE = "#F8F9FB"
-TEXT_MUTED = "#6B7B8D"
+TEXT_MUTED = "#1A1A1A"
 SUCCESS = "#2E8B57"
 WARNING = "#D4A017"
 DANGER  = "#C0392B"
@@ -46,8 +46,8 @@ PLOTLY_LAYOUT = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(0,0,0,0)",
     margin=dict(l=20, r=20, t=40, b=20),
-    xaxis=dict(showgrid=False, color="#3D5A80"),
-    yaxis=dict(gridcolor="#E0E4E8", gridwidth=1, color="#3D5A80"),
+    xaxis=dict(showgrid=False, color="#0B1D3A", tickfont=dict(color="#0B1D3A", size=12), titlefont=dict(color="#0B1D3A", size=13)),
+    yaxis=dict(gridcolor="#E0E4E8", gridwidth=1, color="#0B1D3A", tickfont=dict(color="#0B1D3A", size=12), titlefont=dict(color="#0B1D3A", size=13)),
     colorway=PALETTE,
     hoverlabel=dict(bgcolor="white", font_size=13, font_color="#0B1D3A", bordercolor="#4A90D9"),
 )
@@ -68,7 +68,7 @@ html, body, [class*="st-"] { font-family: 'Inter', -apple-system, BlinkMacSystem
 .stApp { background: #F8F9FB; color: #0B1D3A; }
 section[data-testid="stSidebar"] { background: #0B1D3A; }
 section[data-testid="stSidebar"] * { color: #CBD5E1 !important; }
-section[data-testid="stSidebar"] .stMultiSelect label { color: #94A3B8 !important; font-weight: 500; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; }
+section[data-testid="stSidebar"] .stMultiSelect label { color: #E2E8F0 !important; font-weight: 500; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; }
 section[data-testid="stSidebar"] hr { border-color: rgba(74,144,217,0.25); }
 .hero { background: linear-gradient(135deg, #0B1D3A 0%, #1E3A5F 60%, #4A90D9 100%); border-radius: 12px; padding: 2rem 2.5rem; margin-bottom: 1.5rem; }
 .hero h1 { color: white; font-size: 2rem; font-weight: 700; margin: 0 0 0.25rem 0; }
@@ -79,17 +79,17 @@ section[data-testid="stSidebar"] hr { border-color: rgba(74,144,217,0.25); }
 .kpi-card.purple { border-left-color: #7BAFD4; }
 .kpi-card.red    { border-left-color: #C0392B; }
 .kpi-card.amber  { border-left-color: #D4A017; }
-.kpi-card .label { font-size: 0.75rem; font-weight: 600; color: #6B7B8D; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; }
+.kpi-card .label { font-size: 0.75rem; font-weight: 600; color: #0B1D3A; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; }
 .kpi-card .value { font-size: 1.55rem; font-weight: 700; color: #0B1D3A; line-height: 1.1; }
 .section-card { background: white; border-radius: 12px; padding: 1.5rem 1.75rem 1.25rem; margin-top: 1.5rem; margin-bottom: 0.5rem; box-shadow: 0 1px 4px rgba(11,29,58,0.06); }
 .section-card h3 { color: #0B1D3A; font-size: 1.1rem; font-weight: 600; margin: 0 0 0.2rem 0; }
-.section-card .subtitle { color: #6B7B8D; font-size: 0.82rem; margin-bottom: 0.5rem; }
+.section-card .subtitle { color: #1A1A1A; font-size: 0.82rem; margin-bottom: 0.5rem; }
 [data-testid="stDataFrame"] { border-radius: 8px; overflow: hidden; }
 [data-testid="stDataFrame"] th { background: #0B1D3A !important; color: #CBD5E1 !important; }
 [data-testid="stDataFrame"] td { background: #F8F9FB !important; color: #0B1D3A !important; }
 header[data-testid="stHeader"] { background: #F8F9FB; }
 [data-testid="stPlotlyChart"] { margin-top: -0.5rem; }
-.footer { text-align: center; color: #8E99A4; font-size: 0.78rem; padding: 2rem 0 1rem; border-top: 1px solid #E0E4E8; margin-top: 2rem; }
+.footer { text-align: center; color: #1A1A1A; font-size: 0.78rem; padding: 2rem 0 1rem; border-top: 1px solid #E0E4E8; margin-top: 2rem; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -385,8 +385,8 @@ if not dn_df.empty:
         _style_fig(fig4, 380)
         fig4.update_layout(
             polar=dict(
-                radialaxis=dict(visible=True, gridcolor="#E2E8F0", ticksuffix="%"),
-                angularaxis=dict(gridcolor="#E2E8F0"),
+                radialaxis=dict(visible=True, gridcolor="#E2E8F0", ticksuffix="%", tickfont=dict(color="#0B1D3A", size=11)),
+                angularaxis=dict(gridcolor="#E2E8F0", tickfont=dict(color="#0B1D3A", size=12)),
                 bgcolor="rgba(0,0,0,0)",
             ),
             title=dict(text="Risk Profile by LOB", font=dict(size=14, color=PRIMARY)),
