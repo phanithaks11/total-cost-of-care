@@ -1,6 +1,6 @@
 import os
+import threading
 import time
-import uuid
 
 import psycopg2
 import pandas as pd
@@ -17,8 +17,12 @@ PGHOST = os.environ.get("PGHOST") or os.environ.get("LAKEBASE_HOST")
 PGDATABASE = os.environ.get("PGDATABASE") or os.environ.get("LAKEBASE_DATABASE", "databricks_postgres")
 PGUSER = os.environ.get("PGUSER")
 PGPORT = int(os.environ.get("PGPORT", "5432"))
-# Only use Lakebase when explicitly opted in — the tcoc tables live in Unity Catalog
-USE_LAKEBASE = os.environ.get("USE_LAKEBASE", "false").lower() == "true"
+LAKEBASE_ENDPOINT = os.environ.get(
+    "LAKEBASE_ENDPOINT", "projects/tcoc-app/branches/production/endpoints/primary"
+)
+# Lakebase (Postgres) is the operational serving layer. tcoc_gold tables are synced
+# from Unity Catalog into Lakebase; set USE_LAKEBASE=false to fall back to the SQL warehouse.
+USE_LAKEBASE = os.environ.get("USE_LAKEBASE", "true").lower() == "true"
 
 
 def table_ref(table_name: str) -> str:
@@ -119,19 +123,31 @@ def _client():
     return WorkspaceClient()
 
 
+_TOKEN_LOCK = threading.Lock()
+_TOKEN_CACHE = {"token": None, "expires_at": 0.0}
+_TOKEN_TTL_SECONDS = 45 * 60  # Lakebase OAuth tokens last ~1h; refresh early
+
+
+def _lakebase_token() -> str:
+    """Mint (and cache) a Lakebase Autoscaling credential for the app service principal."""
+    with _TOKEN_LOCK:
+        if _TOKEN_CACHE["token"] and time.time() < _TOKEN_CACHE["expires_at"]:
+            return _TOKEN_CACHE["token"]
+        cred = _client().postgres.generate_database_credential(endpoint=LAKEBASE_ENDPOINT)
+        _TOKEN_CACHE["token"] = cred.token
+        _TOKEN_CACHE["expires_at"] = time.time() + _TOKEN_TTL_SECONDS
+        return cred.token
+
+
 def _lakebase_connection():
-    w = _client()
-    cred = w.database.generate_database_credential(
-        request_id=str(uuid.uuid4()),
-        instance_names=[PGDATABASE],
-    )
     return psycopg2.connect(
         host=PGHOST,
         database=PGDATABASE,
         user=PGUSER,
         port=PGPORT,
-        password=cred.token,
+        password=_lakebase_token(),
         sslmode="require",
+        application_name=os.environ.get("PGAPPNAME", "luminos-health-tcoc"),
     )
 
 
