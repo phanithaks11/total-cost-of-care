@@ -49,6 +49,11 @@ A healthcare cost analytics platform built on Databricks Lakeflow Spark Declarat
 ```
 total-cost-of-care/
 ├── README.md
+├── app.py / app.yaml / requirements.txt  # Streamlit app (luminos-health-tcoc)
+├── metric_views/
+│   └── tcoc_metrics.sql          # UC metric views over tcoc_gold
+├── ml/
+│   └── tcoc_cost_forecast_model  # LightGBM 6-month cost forecast notebook
 └── transformations/
     ├── bronze/
     │   └── bronze_ingestion.sql      # 10 streaming tables — raw ingestion
@@ -57,6 +62,17 @@ total-cost-of-care/
     └── gold/
         └── gold_views.sql            # 6 materialized views — analytics layer
 ```
+
+## Cost Forecast Model (`ml/`)
+
+| Item | Value |
+| --- | --- |
+| Notebook | `ml/tcoc_cost_forecast_model` |
+| Features | `phanitha_test_catalog.tcoc_ml.cost_forecast_features` |
+| Model | `phanitha_test_catalog.tcoc_ml.cost_forecast_model` (LightGBM via sklearn `TransformedTargetRegressor`, log1p target) |
+| Serving endpoint | `cost_forecast_model` |
+| Output | `phanitha_test_catalog.tcoc_gold.tcoc_cost_forecast` + Lakebase `tcoc_gold.tcoc_cost_forecast` |
+| Validation (v1) | MAPE 9.3%, MAE $3,040, RMSE $6,290 |
 
 ## Data Quality Expectations
 
