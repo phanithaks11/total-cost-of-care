@@ -50,6 +50,14 @@ A healthcare cost analytics platform built on Databricks Lakeflow Spark Declarat
 total-cost-of-care/
 ├── README.md
 ├── app.py / app.yaml / requirements.txt  # Streamlit app (luminos-health-tcoc)
+├── dashboards/
+│   └── luminos_health_tcoc.lvdash.json   # AI/BI dashboard (6 pages)
+├── genie/
+│   └── tcoc_genie_agent.json     # Genie agent config (tables, instructions, sample questions)
+├── evidence/
+│   ├── collect_build_evidence    # Notebook that regenerates the evidence files below
+│   ├── README.md                 # Index of execution evidence
+│   └── 0*_*.md                   # Text outputs: pipeline, gold queries, ML, serving, Lakebase/app, notebook log
 ├── metric_views/
 │   └── tcoc_metrics.sql          # UC metric views over tcoc_gold
 ├── ml/
@@ -62,6 +70,10 @@ total-cost-of-care/
     └── gold/
         └── gold_views.sql            # 6 materialized views — analytics layer
 ```
+
+## Execution Evidence (`evidence/`)
+
+Plain-text proof that the build ran, generated from live queries against the workspace by `evidence/collect_build_evidence`. Start with [`evidence/README.md`](evidence/README.md). Only aggregated results are included — no member- or patient-level rows.
 
 ## Cost Forecast Model (`ml/`)
 

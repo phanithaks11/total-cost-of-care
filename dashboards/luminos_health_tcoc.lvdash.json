@@ -1,0 +1,3115 @@
+{
+  "datasets": [
+    {
+      "name": "ds_pmpm_lob",
+      "displayName": "PMPM by LOB",
+      "queryLines": [
+        "SELECT\n",
+        "  CAST(report_month AS DATE) AS report_month,\n",
+        "  line_of_business,\n",
+        "  ROUND(SUM(total_paid) / SUM(active_members), 2) AS pmpm\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_pmpm_trends\n",
+        "GROUP BY\n",
+        "  1,\n",
+        "  2\n",
+        "ORDER BY\n",
+        "  1"
+      ]
+    },
+    {
+      "name": "ds_kpis",
+      "displayName": "Executive KPIs",
+      "queryLines": [
+        "SELECT\n",
+        "  *\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_executive_kpis"
+      ]
+    },
+    {
+      "name": "ds_lob_cost",
+      "displayName": "Cost by LOB",
+      "queryLines": [
+        "SELECT\n",
+        "  line_of_business,\n",
+        "  ROUND(SUM(total_paid), 0) AS total_paid\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_pmpm_trends\n",
+        "GROUP BY\n",
+        "  1"
+      ]
+    },
+    {
+      "name": "ds_monthly",
+      "displayName": "Monthly Breakdown",
+      "queryLines": [
+        "SELECT\n",
+        "  report_month,\n",
+        "  SUM(active_members) AS active_members,\n",
+        "  ROUND(SUM(total_paid), 0) AS total_paid,\n",
+        "  ROUND(SUM(total_paid) / SUM(active_members), 2) AS pmpm,\n",
+        "  ROUND(SUM(denied_count) * 100.0 / SUM(claim_count), 2) AS denial_rate_pct,\n",
+        "  ROUND(SUM(oon_paid) * 100.0 / NULLIF(SUM(total_paid), 0), 2) AS network_leakage_pct\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_pmpm_trends\n",
+        "GROUP BY\n",
+        "  1\n",
+        "ORDER BY\n",
+        "  1"
+      ]
+    },
+    {
+      "name": "ds_risk_tier",
+      "displayName": "Risk Tier Distribution",
+      "queryLines": [
+        "SELECT\n",
+        "  cost_risk_tier,\n",
+        "  line_of_business,\n",
+        "  COUNT(*) AS member_count,\n",
+        "  ROUND(SUM(total_paid), 0) AS total_cost\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_member_summary\n",
+        "GROUP BY\n",
+        "  1,\n",
+        "  2"
+      ]
+    },
+    {
+      "name": "ds_net_lob",
+      "displayName": "Network by LOB",
+      "queryLines": [
+        "SELECT\n",
+        "  line_of_business,\n",
+        "  network_status,\n",
+        "  ROUND(SUM(total_paid), 0) AS total_paid\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_provider_network_analysis\n",
+        "GROUP BY\n",
+        "  1,\n",
+        "  2"
+      ]
+    },
+    {
+      "name": "ds_specialty",
+      "displayName": "Top Specialties",
+      "queryLines": [
+        "SELECT\n",
+        "  provider_specialty,\n",
+        "  ROUND(SUM(total_paid) / SUM(claim_count), 2) AS avg_cost_per_claim\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_service_category_costs\n",
+        "GROUP BY\n",
+        "  1\n",
+        "ORDER BY\n",
+        "  2 DESC\n",
+        "LIMIT 10"
+      ]
+    },
+    {
+      "name": "ds_svc_paid",
+      "displayName": "Service Category Paid",
+      "queryLines": [
+        "SELECT\n",
+        "  procedure_category,\n",
+        "  ROUND(SUM(total_paid), 0) AS total_paid\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_service_category_costs\n",
+        "GROUP BY\n",
+        "  1\n",
+        "ORDER BY\n",
+        "  2 DESC"
+      ]
+    },
+    {
+      "name": "ds_pmpm_svc",
+      "displayName": "PMPM by Service",
+      "queryLines": [
+        "SELECT\n",
+        "  report_month,\n",
+        "  'Surgery' AS service_category,\n",
+        "  ROUND(SUM(surgery_paid) / SUM(active_members), 2) AS pmpm\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_pmpm_trends\n",
+        "GROUP BY\n",
+        "  1\n",
+        "UNION ALL\n",
+        "SELECT\n",
+        "  report_month,\n",
+        "  'Emergency',\n",
+        "  ROUND(SUM(emergency_paid) / SUM(active_members), 2)\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_pmpm_trends\n",
+        "GROUP BY\n",
+        "  1\n",
+        "UNION ALL\n",
+        "SELECT\n",
+        "  report_month,\n",
+        "  'Primary Care',\n",
+        "  ROUND(SUM(primary_care_paid) / SUM(active_members), 2)\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_pmpm_trends\n",
+        "GROUP BY\n",
+        "  1\n",
+        "UNION ALL\n",
+        "SELECT\n",
+        "  report_month,\n",
+        "  'Radiology',\n",
+        "  ROUND(SUM(radiology_paid) / SUM(active_members), 2)\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_pmpm_trends\n",
+        "GROUP BY\n",
+        "  1\n",
+        "ORDER BY\n",
+        "  1,\n",
+        "  2"
+      ]
+    },
+    {
+      "name": "ds_svc_detail",
+      "displayName": "Service Category Detail",
+      "queryLines": [
+        "SELECT\n",
+        "  procedure_category,\n",
+        "  provider_specialty,\n",
+        "  SUM(claim_count) AS claims,\n",
+        "  ROUND(SUM(total_paid), 0) AS total_paid,\n",
+        "  ROUND(SUM(total_paid) / SUM(claim_count), 2) AS avg_cost,\n",
+        "  ROUND(SUM(total_paid) * 100.0 / NULLIF(SUM(total_billed), 0), 2) AS reimb_rate,\n",
+        "  ROUND(SUM(denied_claims) * 100.0 / NULLIF(SUM(claim_count), 0), 2) AS denial_rate\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_service_category_costs\n",
+        "GROUP BY\n",
+        "  1,\n",
+        "  2\n",
+        "ORDER BY\n",
+        "  4 DESC"
+      ]
+    },
+    {
+      "name": "ds_scatter",
+      "displayName": "Provider Efficiency",
+      "queryLines": [
+        "SELECT\n",
+        "  provider_id,\n",
+        "  ROUND(SUM(total_paid) / SUM(total_claims), 2) AS avg_paid_per_claim,\n",
+        "  SUM(total_claims) AS total_claims,\n",
+        "  network_status\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_provider_network_analysis\n",
+        "GROUP BY\n",
+        "  provider_id,\n",
+        "  network_status\n",
+        "HAVING\n",
+        "  SUM(total_claims) >= 5"
+      ]
+    },
+    {
+      "name": "ds_state",
+      "displayName": "State Summary",
+      "queryLines": [
+        "SELECT\n",
+        "  member_state,\n",
+        "  SUM(active_members) AS active_members,\n",
+        "  ROUND(SUM(total_paid), 0) AS total_paid,\n",
+        "  ROUND(SUM(total_paid) / SUM(active_members), 2) AS pmpm,\n",
+        "  ROUND(SUM(oon_paid) * 100.0 / NULLIF(SUM(total_paid), 0), 2) AS oon_pct,\n",
+        "  ROUND(SUM(er_visits) * 1000.0 / SUM(active_members), 2) AS er_rate_per_1000\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_geographic_analysis\n",
+        "GROUP BY\n",
+        "  1\n",
+        "ORDER BY\n",
+        "  3 DESC"
+      ]
+    },
+    {
+      "name": "ds_state_pmpm",
+      "displayName": "Top States PMPM",
+      "queryLines": [
+        "SELECT\n",
+        "  member_state,\n",
+        "  ROUND(SUM(total_paid) / SUM(active_members), 2) AS pmpm\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_geographic_analysis\n",
+        "GROUP BY\n",
+        "  1\n",
+        "ORDER BY\n",
+        "  2 DESC\n",
+        "LIMIT 10"
+      ]
+    },
+    {
+      "name": "ds_state_er",
+      "displayName": "Top States ER",
+      "queryLines": [
+        "SELECT\n",
+        "  member_state,\n",
+        "  ROUND(SUM(er_visits) * 1000.0 / SUM(active_members), 2) AS er_rate_per_1000\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_geographic_analysis\n",
+        "GROUP BY\n",
+        "  1\n",
+        "ORDER BY\n",
+        "  2 DESC\n",
+        "LIMIT 10"
+      ]
+    },
+    {
+      "name": "ds_top_providers",
+      "displayName": "Top Providers",
+      "queryLines": [
+        "SELECT\n",
+        "  provider_id,\n",
+        "  provider_specialty,\n",
+        "  network_status,\n",
+        "  SUM(total_claims) AS total_claims,\n",
+        "  ROUND(SUM(total_paid), 0) AS total_paid,\n",
+        "  ROUND(AVG(reimbursement_rate), 2) AS reimb_rate,\n",
+        "  ROUND(AVG(denial_rate_pct), 2) AS denial_rate\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_provider_network_analysis\n",
+        "GROUP BY\n",
+        "  1,\n",
+        "  2,\n",
+        "  3\n",
+        "ORDER BY\n",
+        "  5 DESC\n",
+        "LIMIT 20"
+      ]
+    },
+    {
+      "name": "ds_actual_vs_forecast",
+      "displayName": "Actual vs Forecast PMPM",
+      "queryLines": [
+        "SELECT\n",
+        "  CAST(report_month AS DATE) AS month,\n",
+        "  line_of_business,\n",
+        "  plan_type,\n",
+        "  member_state,\n",
+        "  pmpm AS pmpm_value,\n",
+        "  'Actual' AS series_type\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_pmpm_trends\n",
+        "UNION ALL\n",
+        "SELECT\n",
+        "  CAST(forecast_month AS DATE) AS month,\n",
+        "  line_of_business,\n",
+        "  plan_type,\n",
+        "  member_state,\n",
+        "  predicted_pmpm AS pmpm_value,\n",
+        "  'Forecast' AS series_type\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_cost_forecast\n",
+        "ORDER BY\n",
+        "  month"
+      ]
+    },
+    {
+      "name": "ds_forecast",
+      "displayName": "Cost Forecast",
+      "queryLines": [
+        "SELECT\n",
+        "  forecast_month,\n",
+        "  line_of_business,\n",
+        "  plan_type,\n",
+        "  member_state,\n",
+        "  predicted_paid,\n",
+        "  predicted_pmpm,\n",
+        "  lower_bound,\n",
+        "  upper_bound,\n",
+        "  model_version\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_cost_forecast"
+      ]
+    },
+    {
+      "name": "ds_svc_spec_bridge",
+      "displayName": "Service-Specialty Bridge",
+      "queryLines": [
+        "SELECT DISTINCT\n",
+        "  procedure_category,\n",
+        "  provider_specialty\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_service_category_costs"
+      ]
+    },
+    {
+      "name": "ds_ai_forecast_pmpm",
+      "displayName": "AI Forecast — PMPM",
+      "queryLines": [
+        "WITH monthly_pmpm AS (\n",
+        "  SELECT\n",
+        "    CAST(report_month AS DATE) AS ds,\n",
+        "    ROUND(SUM(total_paid) / SUM(active_members), 2) AS pmpm\n",
+        "  FROM\n",
+        "    phanitha_test_catalog.tcoc_gold.tcoc_pmpm_trends\n",
+        "  GROUP BY\n",
+        "    1\n",
+        "  ORDER BY\n",
+        "    1\n",
+        "),\n",
+        "forecasted AS (\n",
+        "  SELECT\n",
+        "    *\n",
+        "  FROM\n",
+        "    ai_forecast(\n",
+        "      TABLE(monthly_pmpm),\n",
+        "      horizon =>\n",
+        "        (\n",
+        "          SELECT\n",
+        "            DATE_ADD(MAX(ds), 180)\n",
+        "          FROM\n",
+        "            monthly_pmpm\n",
+        "        ),\n",
+        "      time_col => 'ds',\n",
+        "      value_col => 'pmpm',\n",
+        "      prediction_interval_width => 0.9,\n",
+        "      parameters => '{\"global_floor\": 0}',\n",
+        "      version => '1'\n",
+        "    )\n",
+        ")\n",
+        "SELECT\n",
+        "  ds,\n",
+        "  pmpm AS value,\n",
+        "  'Actual' AS series\n",
+        "FROM\n",
+        "  monthly_pmpm\n",
+        "UNION ALL\n",
+        "SELECT\n",
+        "  ds,\n",
+        "  pmpm AS value,\n",
+        "  'Forecast' AS series\n",
+        "FROM\n",
+        "  monthly_pmpm\n",
+        "WHERE\n",
+        "  ds\n",
+        "    = (\n",
+        "      SELECT\n",
+        "        MAX(ds)\n",
+        "      FROM\n",
+        "        monthly_pmpm\n",
+        "    )\n",
+        "UNION ALL\n",
+        "SELECT\n",
+        "  ds,\n",
+        "  pmpm_forecast AS value,\n",
+        "  'Forecast' AS series\n",
+        "FROM\n",
+        "  forecasted\n",
+        "UNION ALL\n",
+        "SELECT\n",
+        "  ds,\n",
+        "  pmpm_upper AS value,\n",
+        "  'Upper Bound' AS series\n",
+        "FROM\n",
+        "  forecasted\n",
+        "UNION ALL\n",
+        "SELECT\n",
+        "  ds,\n",
+        "  pmpm_lower AS value,\n",
+        "  'Lower Bound' AS series\n",
+        "FROM\n",
+        "  forecasted\n",
+        "ORDER BY\n",
+        "  ds,\n",
+        "  series"
+      ]
+    },
+    {
+      "name": "ds_cardiology_oon_state",
+      "displayName": "Cardiology OON by State",
+      "queryLines": [
+        "SELECT\n",
+        "  provider_state,\n",
+        "  SUM(total_claims) AS total_claims,\n",
+        "  ROUND(SUM(total_paid), 0) AS total_paid\n",
+        "FROM\n",
+        "  phanitha_test_catalog.tcoc_gold.tcoc_provider_network_analysis\n",
+        "WHERE\n",
+        "  provider_specialty = 'Cardiology'\n",
+        "  AND network_status = 'Out-of-Network'\n",
+        "GROUP BY\n",
+        "  provider_state\n",
+        "ORDER BY\n",
+        "  total_paid DESC"
+      ]
+    }
+  ],
+  "relationshipGraphs": [
+    {
+      "sources": [
+        {
+          "name": "PMPM_by_LOB",
+          "datasetName": "ds_pmpm_lob"
+        },
+        {
+          "name": "Executive_KPIs",
+          "datasetName": "ds_kpis"
+        },
+        {
+          "name": "Cost_by_LOB",
+          "datasetName": "ds_lob_cost"
+        },
+        {
+          "name": "Monthly_Breakdown",
+          "datasetName": "ds_monthly"
+        },
+        {
+          "name": "Risk_Tier_Distribution",
+          "datasetName": "ds_risk_tier"
+        },
+        {
+          "name": "Network_by_LOB",
+          "datasetName": "ds_net_lob"
+        },
+        {
+          "name": "Top_Specialties",
+          "datasetName": "ds_specialty"
+        },
+        {
+          "name": "Service_Category_Paid",
+          "datasetName": "ds_svc_paid"
+        },
+        {
+          "name": "PMPM_by_Service",
+          "datasetName": "ds_pmpm_svc"
+        },
+        {
+          "name": "Service_Category_Detail",
+          "datasetName": "ds_svc_detail"
+        },
+        {
+          "name": "Provider_Efficiency",
+          "datasetName": "ds_scatter"
+        },
+        {
+          "name": "State_Summary",
+          "datasetName": "ds_state"
+        },
+        {
+          "name": "Top_States_PMPM",
+          "datasetName": "ds_state_pmpm"
+        },
+        {
+          "name": "Top_States_ER",
+          "datasetName": "ds_state_er"
+        },
+        {
+          "name": "Top_Providers",
+          "datasetName": "ds_top_providers"
+        },
+        {
+          "name": "Actual_vs_Forecast_PMPM",
+          "datasetName": "ds_actual_vs_forecast"
+        },
+        {
+          "name": "Cost_Forecast",
+          "datasetName": "ds_forecast"
+        },
+        {
+          "name": "ServiceSpecialty_Bridge",
+          "datasetName": "ds_svc_spec_bridge"
+        },
+        {
+          "name": "AI_Forecast__PMPM",
+          "datasetName": "ds_ai_forecast_pmpm"
+        },
+        {
+          "name": "Cardiology_OON_by_State",
+          "datasetName": "ds_cardiology_oon_state"
+        }
+      ],
+      "relationships": [
+        {
+          "name": "relationship_0",
+          "from": "Service_Category_Paid",
+          "to": "Service_Category_Detail",
+          "on": "`Service_Category_Paid`.`procedure_category` = `Service_Category_Detail`.`procedure_category`",
+          "cardinality": "CARDINALITY_ONE_TO_MANY"
+        },
+        {
+          "name": "relationship_1",
+          "from": "Service_Category_Paid",
+          "to": "ServiceSpecialty_Bridge",
+          "on": "`Service_Category_Paid`.`procedure_category` = `ServiceSpecialty_Bridge`.`procedure_category`",
+          "cardinality": "CARDINALITY_ONE_TO_MANY"
+        },
+        {
+          "name": "relationship_2",
+          "from": "Top_Specialties",
+          "to": "ServiceSpecialty_Bridge",
+          "on": "`Top_Specialties`.`provider_specialty` = `ServiceSpecialty_Bridge`.`provider_specialty`",
+          "cardinality": "CARDINALITY_ONE_TO_MANY"
+        },
+        {
+          "name": "relationship_3",
+          "from": "Cost_by_LOB",
+          "to": "Risk_Tier_Distribution",
+          "on": "`Cost_by_LOB`.`line_of_business` = `Risk_Tier_Distribution`.`line_of_business`",
+          "cardinality": "CARDINALITY_ONE_TO_MANY"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "a1f9e7be",
+      "displayName": "Executive Summary",
+      "layout": [
+        {
+          "widget": {
+            "name": "header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Luminos Health — Total Cost of Care"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_members",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_kpis",
+                  "fields": [
+                    {
+                      "name": "total_members",
+                      "expression": "`total_members`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Total Members"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_members",
+                  "rowNumber": 0,
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_paid",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_kpis",
+                  "fields": [
+                    {
+                      "name": "total_paid",
+                      "expression": "`total_paid`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Total Paid"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_paid",
+                  "rowNumber": 0,
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 3,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_pmpm",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_kpis",
+                  "fields": [
+                    {
+                      "name": "overall_pmpm",
+                      "expression": "`overall_pmpm`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Overall PMPM"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "overall_pmpm",
+                  "rowNumber": 0,
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 0
+                    }
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 3,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_denial",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_kpis",
+                  "fields": [
+                    {
+                      "name": "denial_rate_pct",
+                      "expression": "`denial_rate_pct`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Denial Rate %"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "denial_rate_pct",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 10,
+            "y": 3,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_leakage",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_kpis",
+                  "fields": [
+                    {
+                      "name": "network_leakage_pct",
+                      "expression": "`network_leakage_pct`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Network Leakage %"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "network_leakage_pct",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 3,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_er",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_kpis",
+                  "fields": [
+                    {
+                      "name": "er_rate_per_1000",
+                      "expression": "`er_rate_per_1000`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "ER Rate / 1,000"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "er_rate_per_1000",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 3,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "risk_bar",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Risk_Tier_Distribution__line_of_business",
+                      "expression": "`Risk_Tier_Distribution`.`line_of_business`"
+                    },
+                    {
+                      "name": "Risk_Tier_Distribution__cost_risk_tier",
+                      "expression": "`Risk_Tier_Distribution`.`cost_risk_tier`"
+                    },
+                    {
+                      "name": "sum(Risk_Tier_Distribution__total_cost)",
+                      "expression": "SUM(`Risk_Tier_Distribution`.`total_cost`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Cost Distribution by Risk Tier",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "mark": {
+                "layout": "stack"
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Risk_Tier_Distribution__cost_risk_tier",
+                  "displayName": "Cost Risk Tier",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(Risk_Tier_Distribution__total_cost)",
+                  "displayName": "Total Cost",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "Risk_Tier_Distribution__line_of_business",
+                  "displayName": "Line of Business",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "lob_pie",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "sum(Cost_by_LOB__total_paid)",
+                      "expression": "SUM(`Cost_by_LOB`.`total_paid`)"
+                    },
+                    {
+                      "name": "Cost_by_LOB__line_of_business",
+                      "expression": "`Cost_by_LOB`.`line_of_business`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Cost by Line of Business",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "sum(Cost_by_LOB__total_paid)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Total Paid"
+                },
+                "color": {
+                  "fieldName": "Cost_by_LOB__line_of_business",
+                  "displayName": "Line of Business",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 5,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "subtitle",
+            "multilineTextboxSpec": {
+              "lines": [
+                "Executive overview of total cost of care across all lines of business, payers, and member populations."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_lob",
+            "queries": [
+              {
+                "name": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b073db3813d0b57ce4eb8a1c10ba_line_of_business",
+                "query": {
+                  "datasetName": "ds_lob_cost",
+                  "fields": [
+                    {
+                      "name": "line_of_business",
+                      "expression": "`line_of_business`"
+                    },
+                    {
+                      "name": "line_of_business_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Line of Business"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "line_of_business",
+                    "queryName": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b073db3813d0b57ce4eb8a1c10ba_line_of_business"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_risk",
+            "queries": [
+              {
+                "name": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b073db7f1fb58d910a6245fc146c_cost_risk_tier",
+                "query": {
+                  "datasetName": "ds_risk_tier",
+                  "fields": [
+                    {
+                      "name": "cost_risk_tier",
+                      "expression": "`cost_risk_tier`"
+                    },
+                    {
+                      "name": "cost_risk_tier_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Risk Tier"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "cost_risk_tier",
+                    "queryName": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b073db7f1fb58d910a6245fc146c_cost_risk_tier"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "pmpm_trends",
+      "displayName": "PMPM Trends",
+      "layout": [
+        {
+          "widget": {
+            "name": "monthly_tbl",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_monthly",
+                  "fields": [
+                    {
+                      "name": "report_month",
+                      "expression": "`report_month`"
+                    },
+                    {
+                      "name": "active_members",
+                      "expression": "`active_members`"
+                    },
+                    {
+                      "name": "total_paid",
+                      "expression": "`total_paid`"
+                    },
+                    {
+                      "name": "pmpm",
+                      "expression": "`pmpm`"
+                    },
+                    {
+                      "name": "denial_rate_pct",
+                      "expression": "`denial_rate_pct`"
+                    },
+                    {
+                      "name": "network_leakage_pct",
+                      "expression": "`network_leakage_pct`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Monthly Summary",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "report_month",
+                    "displayName": "Report Month"
+                  },
+                  {
+                    "fieldName": "active_members",
+                    "displayName": "Active Members"
+                  },
+                  {
+                    "fieldName": "total_paid",
+                    "displayName": "Total Paid"
+                  },
+                  {
+                    "fieldName": "pmpm",
+                    "displayName": "PMPM"
+                  },
+                  {
+                    "fieldName": "denial_rate_pct",
+                    "displayName": "Denial Rate %"
+                  },
+                  {
+                    "fieldName": "network_leakage_pct",
+                    "displayName": "Network Leakage %"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 13,
+            "width": 12,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## PMPM Trends"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "pmpm_lob",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_pmpm_lob",
+                  "fields": [
+                    {
+                      "name": "line_of_business",
+                      "expression": "`line_of_business`"
+                    },
+                    {
+                      "name": "monthly(report_month)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `report_month`)"
+                    },
+                    {
+                      "name": "sum(pmpm)",
+                      "expression": "SUM(`pmpm`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Monthly PMPM by Line of Business"
+              },
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(report_month)",
+                  "displayName": "Month",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(pmpm)",
+                  "displayName": "PMPM ($)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "line_of_business",
+                  "displayName": "Line of Business",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 12,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "pmpm_svc",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_pmpm_svc",
+                  "fields": [
+                    {
+                      "name": "service_category",
+                      "expression": "`service_category`"
+                    },
+                    {
+                      "name": "monthly(report_month)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `report_month`)"
+                    },
+                    {
+                      "name": "sum(pmpm)",
+                      "expression": "SUM(`pmpm`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "PMPM by Service Category"
+              },
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(report_month)",
+                  "displayName": "Month",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(pmpm)",
+                  "displayName": "PMPM ($)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "service_category",
+                  "displayName": "Service Category",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 12,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_lob",
+            "queries": [
+              {
+                "name": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b073da3d1ae48470a29dae562716_line_of_business",
+                "query": {
+                  "datasetName": "ds_pmpm_lob",
+                  "fields": [
+                    {
+                      "name": "line_of_business",
+                      "expression": "`line_of_business`"
+                    },
+                    {
+                      "name": "line_of_business_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Line of Business"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "line_of_business",
+                    "queryName": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b073da3d1ae48470a29dae562716_line_of_business"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_svc",
+            "queries": [
+              {
+                "name": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b073dc12181ba953fe24356a69cc_service_category",
+                "query": {
+                  "datasetName": "ds_pmpm_svc",
+                  "fields": [
+                    {
+                      "name": "service_category",
+                      "expression": "`service_category`"
+                    },
+                    {
+                      "name": "service_category_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Service Category"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "service_category",
+                    "queryName": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b073dc12181ba953fe24356a69cc_service_category"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_daterange",
+            "queries": [
+              {
+                "name": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b073da3d1ae48470a29dae562716_report_month",
+                "query": {
+                  "datasetName": "ds_pmpm_lob",
+                  "fields": [
+                    {
+                      "name": "report_month",
+                      "expression": "`report_month`"
+                    },
+                    {
+                      "name": "report_month_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Report Date Range"
+              },
+              "widgetType": "filter-date-range-picker",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "report_month",
+                    "queryName": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b073da3d1ae48470a29dae562716_report_month"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 12,
+            "height": 1
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "service_categories",
+      "displayName": "Service Categories",
+      "layout": [
+        {
+          "widget": {
+            "name": "header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Service Category Analysis"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "svc_bar",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Service_Category_Paid__procedure_category",
+                      "expression": "`Service_Category_Paid`.`procedure_category`"
+                    },
+                    {
+                      "name": "sum(Service_Category_Paid__total_paid)",
+                      "expression": "SUM(`Service_Category_Paid`.`total_paid`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Total Paid by Service Category",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Service_Category_Paid__procedure_category",
+                  "displayName": "Procedure Category",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(Service_Category_Paid__total_paid)",
+                  "displayName": "Total Paid",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "Service_Category_Paid__procedure_category",
+                  "displayName": "Procedure Category",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 6,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "svc_tbl",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Service_Category_Detail__procedure_category",
+                      "expression": "`Service_Category_Detail`.`procedure_category`"
+                    },
+                    {
+                      "name": "Service_Category_Detail__provider_specialty",
+                      "expression": "`Service_Category_Detail`.`provider_specialty`"
+                    },
+                    {
+                      "name": "Service_Category_Detail__claims",
+                      "expression": "`Service_Category_Detail`.`claims`"
+                    },
+                    {
+                      "name": "Service_Category_Detail__total_paid",
+                      "expression": "`Service_Category_Detail`.`total_paid`"
+                    },
+                    {
+                      "name": "Service_Category_Detail__avg_cost",
+                      "expression": "`Service_Category_Detail`.`avg_cost`"
+                    },
+                    {
+                      "name": "Service_Category_Detail__reimb_rate",
+                      "expression": "`Service_Category_Detail`.`reimb_rate`"
+                    },
+                    {
+                      "name": "Service_Category_Detail__denial_rate",
+                      "expression": "`Service_Category_Detail`.`denial_rate`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Service Category Details",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "Service_Category_Detail__procedure_category",
+                    "headerAlignment": "left",
+                    "contentAlignment": "left",
+                    "displayName": "Procedure Category"
+                  },
+                  {
+                    "fieldName": "Service_Category_Detail__provider_specialty",
+                    "headerAlignment": "left",
+                    "contentAlignment": "left",
+                    "displayName": "Provider Specialty"
+                  },
+                  {
+                    "fieldName": "Service_Category_Detail__claims",
+                    "headerAlignment": "right",
+                    "contentAlignment": "right",
+                    "displayName": "Claims"
+                  },
+                  {
+                    "fieldName": "Service_Category_Detail__total_paid",
+                    "headerAlignment": "right",
+                    "contentAlignment": "right",
+                    "displayName": "Total Paid"
+                  },
+                  {
+                    "fieldName": "Service_Category_Detail__avg_cost",
+                    "headerAlignment": "right",
+                    "contentAlignment": "right",
+                    "displayName": "Avg Cost"
+                  },
+                  {
+                    "fieldName": "Service_Category_Detail__reimb_rate",
+                    "headerAlignment": "right",
+                    "contentAlignment": "right",
+                    "displayName": "Reimbursement Rate"
+                  },
+                  {
+                    "fieldName": "Service_Category_Detail__denial_rate",
+                    "headerAlignment": "right",
+                    "contentAlignment": "right",
+                    "displayName": "Denial Rate"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 2,
+            "width": 6,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "spec_bar",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Top_Specialties__provider_specialty",
+                      "expression": "`Top_Specialties`.`provider_specialty`"
+                    },
+                    {
+                      "name": "sum(Top_Specialties__avg_cost_per_claim)",
+                      "expression": "SUM(`Top_Specialties`.`avg_cost_per_claim`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Avg Cost per Claim by Specialty (Top 10)",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Top_Specialties__provider_specialty",
+                  "displayName": "Provider Specialty",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(Top_Specialties__avg_cost_per_claim)",
+                  "displayName": "Avg Cost per Claim",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "Top_Specialties__provider_specialty",
+                  "displayName": "Provider Specialty",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 9,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_category2",
+            "queries": [
+              {
+                "name": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b073dbf01bf9975479a75fa886cc_procedure_category",
+                "query": {
+                  "datasetName": "ds_svc_paid",
+                  "fields": [
+                    {
+                      "name": "procedure_category",
+                      "expression": "`procedure_category`"
+                    },
+                    {
+                      "name": "procedure_category_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Procedure Category"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "procedure_category",
+                    "queryName": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b073dbf01bf9975479a75fa886cc_procedure_category"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 6,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "network_provider",
+      "displayName": "Network & Provider",
+      "layout": [
+        {
+          "widget": {
+            "name": "header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Network & Provider Analysis"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "net_bar",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_net_lob",
+                  "fields": [
+                    {
+                      "name": "network_status",
+                      "expression": "`network_status`"
+                    },
+                    {
+                      "name": "line_of_business",
+                      "expression": "`line_of_business`"
+                    },
+                    {
+                      "name": "sum(total_paid)",
+                      "expression": "SUM(`total_paid`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "In-Network vs Out-of-Network by LOB"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "line_of_business",
+                  "displayName": "Line of Business",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(total_paid)",
+                  "displayName": "Total Paid ($)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "network_status",
+                  "displayName": "Network Status",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "scatter",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_scatter",
+                  "fields": [
+                    {
+                      "name": "network_status",
+                      "expression": "`network_status`"
+                    },
+                    {
+                      "name": "avg_paid_per_claim",
+                      "expression": "`avg_paid_per_claim`"
+                    },
+                    {
+                      "name": "total_claims",
+                      "expression": "`total_claims`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Provider Cost Efficiency"
+              },
+              "version": 3,
+              "widgetType": "scatter",
+              "encodings": {
+                "x": {
+                  "fieldName": "avg_paid_per_claim",
+                  "displayName": "Avg Paid per Claim ($)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "total_claims",
+                  "displayName": "Total Claims",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "network_status",
+                  "displayName": "Network Status",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 2,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "providers_tbl",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Top_Providers__provider_id",
+                      "expression": "`Top_Providers`.`provider_id`"
+                    },
+                    {
+                      "name": "Top_Providers__provider_specialty",
+                      "expression": "`Top_Providers`.`provider_specialty`"
+                    },
+                    {
+                      "name": "Top_Providers__network_status",
+                      "expression": "`Top_Providers`.`network_status`"
+                    },
+                    {
+                      "name": "Top_Providers__total_claims",
+                      "expression": "`Top_Providers`.`total_claims`"
+                    },
+                    {
+                      "name": "Top_Providers__total_paid",
+                      "expression": "`Top_Providers`.`total_paid`"
+                    },
+                    {
+                      "name": "Top_Providers__reimb_rate",
+                      "expression": "`Top_Providers`.`reimb_rate`"
+                    },
+                    {
+                      "name": "Top_Providers__denial_rate",
+                      "expression": "`Top_Providers`.`denial_rate`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Top 20 Providers by Total Paid",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "Top_Providers__provider_id",
+                    "headerAlignment": "left",
+                    "contentAlignment": "left",
+                    "displayName": "Provider ID"
+                  },
+                  {
+                    "fieldName": "Top_Providers__provider_specialty",
+                    "headerAlignment": "left",
+                    "contentAlignment": "left",
+                    "displayName": "Provider Specialty"
+                  },
+                  {
+                    "fieldName": "Top_Providers__network_status",
+                    "headerAlignment": "left",
+                    "contentAlignment": "left",
+                    "displayName": "Network Status"
+                  },
+                  {
+                    "fieldName": "Top_Providers__total_claims",
+                    "headerAlignment": "right",
+                    "contentAlignment": "right",
+                    "displayName": "Total Claims"
+                  },
+                  {
+                    "fieldName": "Top_Providers__total_paid",
+                    "headerAlignment": "right",
+                    "contentAlignment": "right",
+                    "displayName": "Total Paid"
+                  },
+                  {
+                    "fieldName": "Top_Providers__reimb_rate",
+                    "headerAlignment": "right",
+                    "contentAlignment": "right",
+                    "displayName": "Reimbursement Rate"
+                  },
+                  {
+                    "fieldName": "Top_Providers__denial_rate",
+                    "headerAlignment": "right",
+                    "contentAlignment": "right",
+                    "displayName": "Denial Rate"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_specialty",
+            "queries": [
+              {
+                "name": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b073e6c21ab881926c3b9822a5a9_provider_specialty",
+                "query": {
+                  "datasetName": "ds_top_providers",
+                  "fields": [
+                    {
+                      "name": "provider_specialty",
+                      "expression": "`provider_specialty`"
+                    },
+                    {
+                      "name": "provider_specialty_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Provider Specialty"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "provider_specialty",
+                    "queryName": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b073e6c21ab881926c3b9822a5a9_provider_specialty"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_network2",
+            "queries": [
+              {
+                "name": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b073dba5142bb15e7f856e5ad536_network_status",
+                "query": {
+                  "datasetName": "ds_net_lob",
+                  "fields": [
+                    {
+                      "name": "network_status",
+                      "expression": "`network_status`"
+                    },
+                    {
+                      "name": "network_status_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Network Status"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "network_status",
+                    "queryName": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b073dba5142bb15e7f856e5ad536_network_status"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "cardiology_oon_state",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Cardiology_OON_by_State__provider_state",
+                      "expression": "`Cardiology_OON_by_State`.`provider_state`"
+                    },
+                    {
+                      "name": "sum(Cardiology_OON_by_State__total_paid)",
+                      "expression": "SUM(`Cardiology_OON_by_State`.`total_paid`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Cardiology OON Paid by State"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Cardiology_OON_by_State__provider_state",
+                  "displayName": "provider_state",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(Cardiology_OON_by_State__total_paid)",
+                  "displayName": "total_paid",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "Cardiology_OON_by_State__provider_state",
+                  "displayName": "provider_state",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 14,
+            "width": 12,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "geography",
+      "displayName": "Geography",
+      "layout": [
+        {
+          "widget": {
+            "name": "header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Geographic Analysis"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "state_tbl",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_state",
+                  "fields": [
+                    {
+                      "name": "member_state",
+                      "expression": "`member_state`"
+                    },
+                    {
+                      "name": "active_members",
+                      "expression": "`active_members`"
+                    },
+                    {
+                      "name": "total_paid",
+                      "expression": "`total_paid`"
+                    },
+                    {
+                      "name": "pmpm",
+                      "expression": "`pmpm`"
+                    },
+                    {
+                      "name": "oon_pct",
+                      "expression": "`oon_pct`"
+                    },
+                    {
+                      "name": "er_rate_per_1000",
+                      "expression": "`er_rate_per_1000`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "State-Level Cost Summary",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "member_state",
+                    "displayName": "Member State"
+                  },
+                  {
+                    "fieldName": "active_members",
+                    "displayName": "Active Members"
+                  },
+                  {
+                    "fieldName": "total_paid",
+                    "displayName": "Total Paid"
+                  },
+                  {
+                    "fieldName": "pmpm",
+                    "displayName": "PMPM"
+                  },
+                  {
+                    "fieldName": "oon_pct",
+                    "displayName": "Out-of-Network %"
+                  },
+                  {
+                    "fieldName": "er_rate_per_1000",
+                    "displayName": "ER Rate per 1,000"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "pmpm_bar",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_state_pmpm",
+                  "fields": [
+                    {
+                      "name": "member_state",
+                      "expression": "`member_state`"
+                    },
+                    {
+                      "name": "sum(pmpm)",
+                      "expression": "SUM(`pmpm`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Top 10 States by PMPM",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "member_state",
+                  "displayName": "State",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(pmpm)",
+                  "displayName": "PMPM",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "member_state",
+                  "displayName": "State",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "er_bar",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_state_er",
+                  "fields": [
+                    {
+                      "name": "member_state",
+                      "expression": "`member_state`"
+                    },
+                    {
+                      "name": "sum(er_rate_per_1000)",
+                      "expression": "SUM(`er_rate_per_1000`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Top 10 States by ER Utilization",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "member_state",
+                  "displayName": "State",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(er_rate_per_1000)",
+                  "displayName": "ER Rate per 1,000",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "member_state",
+                  "displayName": "State",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 8,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_state",
+            "queries": [
+              {
+                "name": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b073e62b14bdace7b3a64f8ef66e_member_state",
+                "query": {
+                  "datasetName": "ds_state",
+                  "fields": [
+                    {
+                      "name": "member_state",
+                      "expression": "`member_state`"
+                    },
+                    {
+                      "name": "member_state_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Member State"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "member_state",
+                    "queryName": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b073e62b14bdace7b3a64f8ef66e_member_state"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 6,
+            "height": 1
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "forecast",
+      "displayName": "Forecast",
+      "layout": [
+        {
+          "widget": {
+            "name": "header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Cost Forecast — Next 6 Months"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_lob",
+            "queries": [
+              {
+                "name": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b20172e619d0ab50bdbcb97117c6_line_of_business",
+                "query": {
+                  "datasetName": "ds_forecast",
+                  "fields": [
+                    {
+                      "name": "line_of_business",
+                      "expression": "`line_of_business`"
+                    },
+                    {
+                      "name": "line_of_business_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Line of Business"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "line_of_business",
+                    "queryName": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b20172e619d0ab50bdbcb97117c6_line_of_business"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_plan",
+            "queries": [
+              {
+                "name": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b20172e619d0ab50bdbcb97117c6_plan_type",
+                "query": {
+                  "datasetName": "ds_forecast",
+                  "fields": [
+                    {
+                      "name": "plan_type",
+                      "expression": "`plan_type`"
+                    },
+                    {
+                      "name": "plan_type_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Plan Type"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "plan_type",
+                    "queryName": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b20172e619d0ab50bdbcb97117c6_plan_type"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "line_actual_vs_forecast",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_actual_vs_forecast",
+                  "fields": [
+                    {
+                      "name": "series_type",
+                      "expression": "`series_type`"
+                    },
+                    {
+                      "name": "monthly(month)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `month`)"
+                    },
+                    {
+                      "name": "avg(pmpm_value)",
+                      "expression": "AVG(`pmpm_value`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Actual vs Forecast PMPM",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(month)",
+                  "displayName": "Month",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "avg(pmpm_value)",
+                  "displayName": "PMPM",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "series_type",
+                  "displayName": "Series Type",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "counter_total_cost",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_forecast",
+                  "fields": [
+                    {
+                      "name": "sum(predicted_paid)",
+                      "expression": "SUM(`predicted_paid`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Projected 6-Month Total Cost",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(predicted_paid)",
+                  "rowNumber": 0,
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_lob",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_forecast",
+                  "fields": [
+                    {
+                      "name": "line_of_business",
+                      "expression": "`line_of_business`"
+                    },
+                    {
+                      "name": "sum(predicted_paid)",
+                      "expression": "SUM(`predicted_paid`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Forecasted Cost by Line of Business",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "line_of_business",
+                  "displayName": "Line of Business",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(predicted_paid)",
+                  "displayName": "Predicted Paid",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "line_of_business",
+                  "displayName": "Line of Business",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 8,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "state_table",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_forecast",
+                  "fields": [
+                    {
+                      "name": "member_state",
+                      "expression": "`member_state`"
+                    },
+                    {
+                      "name": "line_of_business",
+                      "expression": "`line_of_business`"
+                    },
+                    {
+                      "name": "sum(predicted_paid)",
+                      "expression": "SUM(`predicted_paid`)"
+                    },
+                    {
+                      "name": "avg(predicted_pmpm)",
+                      "expression": "AVG(`predicted_pmpm`)"
+                    },
+                    {
+                      "name": "min(lower_bound)",
+                      "expression": "MIN(`lower_bound`)"
+                    },
+                    {
+                      "name": "max(upper_bound)",
+                      "expression": "MAX(`upper_bound`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "State-Level Forecast Summary",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "member_state",
+                    "displayName": "Member State"
+                  },
+                  {
+                    "fieldName": "line_of_business",
+                    "displayName": "Line of Business"
+                  },
+                  {
+                    "fieldName": "sum(predicted_paid)",
+                    "displayName": "Predicted Paid"
+                  },
+                  {
+                    "fieldName": "avg(predicted_pmpm)",
+                    "displayName": "Predicted PMPM"
+                  },
+                  {
+                    "fieldName": "min(lower_bound)",
+                    "displayName": "Lower Bound"
+                  },
+                  {
+                    "fieldName": "max(upper_bound)",
+                    "displayName": "Upper Bound"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 10,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_daterange",
+            "queries": [
+              {
+                "name": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b2016dde11e3800767621f6f0683_month",
+                "query": {
+                  "datasetName": "ds_actual_vs_forecast",
+                  "fields": [
+                    {
+                      "name": "month",
+                      "expression": "`month`"
+                    },
+                    {
+                      "name": "month_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Date Range"
+              },
+              "widgetType": "filter-date-range-picker",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "month",
+                    "queryName": "dashboards/01f1b0739d6f1972910b5d2c217882ce/datasets/01f1b2016dde11e3800767621f6f0683_month"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "ai_forecast_line",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "AI_Forecast__PMPM__series",
+                      "expression": "`AI_Forecast__PMPM`.`series`"
+                    },
+                    {
+                      "name": "monthly(AI_Forecast__PMPM__ds)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `AI_Forecast__PMPM`.`ds`)"
+                    },
+                    {
+                      "name": "avg(AI_Forecast__PMPM__value)",
+                      "expression": "AVG(`AI_Forecast__PMPM`.`value`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "AI Forecast — PMPM (ai\\_forecast)",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(AI_Forecast__PMPM__ds)",
+                  "displayName": "Month",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "avg(AI_Forecast__PMPM__value)",
+                  "displayName": "value",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "AI_Forecast__PMPM__series",
+                  "displayName": "Series",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 16,
+            "width": 12,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {
+        "light": "#F5F7FA",
+        "dark": "#1A1F2B"
+      },
+      "visualizationColors": [
+        "#0066CC",
+        "#00A3A1",
+        "#5C4EBF",
+        "#E85D3A",
+        "#F5A623",
+        "#2ECC71",
+        "#8E44AD",
+        "#3498DB",
+        "#E74C3C",
+        "#1ABC9C"
+      ],
+      "widgetHeaderAlignment": "LEFT",
+      "widgetPadding": 16,
+      "widgetMargin": 8,
+      "widgetCornerRadius": 8,
+      "widgetShadow": 10,
+      "fontSettings": {
+        "base": {
+          "fontFamily": "Inter",
+          "fontSize": 13
+        },
+        "widgetTitle": {
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fontWeight": 600
+        },
+        "fieldTitle": {
+          "fontFamily": "Inter",
+          "fontSize": 12,
+          "fontWeight": 500
+        },
+        "fieldValue": {
+          "fontFamily": "Inter",
+          "fontSize": 12
+        }
+      },
+      "visualizationColorMappings": [
+        {
+          "value": "In-Network",
+          "color": "#2ECC71"
+        },
+        {
+          "value": "Out-of-Network",
+          "color": "#E85D3A"
+        },
+        {
+          "value": "Catastrophic",
+          "color": "#E74C3C"
+        },
+        {
+          "value": "High",
+          "color": "#F5A623"
+        },
+        {
+          "value": "Rising",
+          "color": "#3498DB"
+        },
+        {
+          "value": "Low",
+          "color": "#2ECC71"
+        },
+        {
+          "value": "Commercial",
+          "color": "#0066CC"
+        },
+        {
+          "value": "Medicare",
+          "color": "#00A3A1"
+        },
+        {
+          "value": "Medicaid",
+          "color": "#5C4EBF"
+        }
+      ]
+    },
+    "applyModeEnabled": false
+  }
+}

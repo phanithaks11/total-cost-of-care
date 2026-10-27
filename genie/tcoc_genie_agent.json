@@ -1,0 +1,486 @@
+{
+  "title": "TCOC — Total Cost of Care",
+  "description": "Genie Agent for the Total Cost of Care application. Analyze claims metrics, member costs, PMPM trends, denial rates, network leakage, ER utilization, cost forecasts, and financial metrics across lines of business, plan types, and member states.",
+  "warehouse_id": "<WAREHOUSE_ID>",
+  "serialized_space": {
+    "version": 2,
+    "config": {
+      "sample_questions": [
+        {
+          "id": "0133f530516641e78d1089c48e91ee70",
+          "question": [
+            "What is the denial rate by plan type and line of business?"
+          ]
+        },
+        {
+          "id": "146a04b838e146388a093606006477b1",
+          "question": [
+            "What percentage of total cost is driven by catastrophic-tier members?"
+          ]
+        },
+        {
+          "id": "585c2aecbd47428ca144e92fa9d5771c",
+          "question": [
+            "What is the predicted PMPM for the next quarter by line of business?"
+          ]
+        },
+        {
+          "id": "a6c0f1ab715f4712a28b327a16a488d5",
+          "question": [
+            "Show network leakage percentage by member state"
+          ]
+        },
+        {
+          "id": "c6c497e1e5fc4aa1912a83036229c0a3",
+          "question": [
+            "Which member states have the highest total cost of care?"
+          ]
+        },
+        {
+          "id": "cb0b6aa5a016410ca78f8df4006aa5f7",
+          "question": [
+            "What is the ER rate per 1000 members by plan type?"
+          ]
+        },
+        {
+          "id": "e1aa8553834649ab83e3818fb72dcdae",
+          "question": [
+            "What is the PMPM trend over the last 12 months by line of business?"
+          ]
+        }
+      ]
+    },
+    "data_sources": {
+      "tables": [
+        {
+          "identifier": "phanitha_test_catalog.hls_demo.claims_financial_metrics",
+          "description": [
+            "Claims financial summary including total billed, allowed, paid, patient responsibility, and payment rate."
+          ],
+          "column_configs": [
+            {
+              "column_name": "Claim Status",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "Claim Type",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "Patient State",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "Payer",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "Service Month",
+              "enable_format_assistance": true
+            }
+          ]
+        },
+        {
+          "identifier": "phanitha_test_catalog.tcoc_gold.tcoc_claims_metrics",
+          "description": [
+            "Claims-level metrics including paid, billed, PMPM, denial rate, network leakage, ER rate, reimbursement rate by service month, LOB, plan type, state, procedure, specialty, network status."
+          ],
+          "column_configs": [
+            {
+              "column_name": "Claim Status",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "Line of Business",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "Member State",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "Network Status",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "Plan Type",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "Procedure Category",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "Service Month",
+              "enable_format_assistance": true
+            }
+          ]
+        },
+        {
+          "identifier": "phanitha_test_catalog.tcoc_gold.tcoc_cost_forecast",
+          "description": [
+            "ML-generated cost forecast predictions including predicted paid, predicted PMPM, confidence bounds, and model version."
+          ],
+          "column_configs": [
+            {
+              "column_name": "forecast_month",
+              "enable_format_assistance": true
+            },
+            {
+              "column_name": "line_of_business",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "member_state",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "model_version",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "plan_type",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            }
+          ]
+        },
+        {
+          "identifier": "phanitha_test_catalog.tcoc_gold.tcoc_member_metrics",
+          "description": [
+            "Aggregated member-level metrics including cost risk tiers, catastrophic cost share, network leakage, ER rate per 1000, and denial rate."
+          ],
+          "column_configs": [
+            {
+              "column_name": "Age Band",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "Cost Risk Tier",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "Line of Business",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "Member State",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "Plan Type",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            }
+          ]
+        },
+        {
+          "identifier": "phanitha_test_catalog.tcoc_gold.tcoc_member_summary",
+          "description": [
+            "Per-member detail including enrollment, total claims, paid, PMPM, cost risk tier, network leakage, denial rate, ER visits, surgery costs."
+          ],
+          "column_configs": [
+            {
+              "column_name": "age_band",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "cost_risk_tier",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "line_of_business",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "member_state",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            },
+            {
+              "column_name": "plan_type",
+              "enable_format_assistance": true,
+              "enable_entity_matching": true
+            }
+          ]
+        }
+      ]
+    },
+    "instructions": {
+      "text_instructions": [
+        {
+          "id": "d923fd06264c4436a5cf2174e73ae3ec",
+          "content": [
+            "This Genie Agent answers questions about Total Cost of Care (TCOC) for a health plan. Key metrics: PMPM (Per Member Per Month), denial rate, network leakage, ER rate per 1000, reimbursement rate, catastrophic cost share. Lines of Business include Commercial, Medicare, and Medicaid. Plan types include HMO, PPO, EPO, and POS. Use tcoc_claims_metrics for time-series trend analysis by service month. Use tcoc_member_metrics for population-level aggregates by risk tier and demographics. Use tcoc_member_summary for individual member-level drill-downs. Use tcoc_cost_forecast for forward-looking predicted costs and PMPM. Use claims_financial_metrics for payer-level financial analysis (billed vs allowed vs paid). When calculating totals, always SUM the pre-aggregated metrics — do not double-count. Round monetary values to 2 decimal places and percentages to 1 decimal place.\n",
+            "\n",
+            "### Metric view tables require MEASURE() syntax for measure columns\n",
+            "The tables tcoc_claims_metrics, tcoc_member_metrics, and claims_financial_metrics are metric views. When querying measure columns (Total Paid, Total Billed, PMPM, Denial Rate, Network Leakage, ER Rate per 1000, Reimbursement Rate, Surgery Costs, etc.), always wrap them in MEASURE() — e.g., MEASURE(`Total Paid`), MEASURE(`PMPM`). Dimension columns (Service Month, Line of Business, Plan Type, etc.) do not need MEASURE(). Use GROUP BY ALL instead of listing dimension columns explicitly."
+          ]
+        }
+      ],
+      "example_question_sqls": [
+        {
+          "id": "1214a192cd8c4ceb9bc7cb9fb242c228",
+          "question": [
+            "What is the predicted PMPM for the next quarter?"
+          ],
+          "sql": [
+            "SELECT forecast_month, line_of_business, plan_type, ROUND(predicted_pmpm, 2) AS predicted_pmpm, ROUND(lower_bound, 2) AS lower_bound, ROUND(upper_bound, 2) AS upper_bound FROM phanitha_test_catalog.tcoc_gold.tcoc_cost_forecast WHERE forecast_month >= DATE_TRUNC('quarter', CURRENT_DATE) ORDER BY forecast_month, line_of_business"
+          ]
+        },
+        {
+          "id": "2374fbec4bdc491d8c1ec169bf18c563",
+          "question": [
+            "What is the PMPM trend by line of business?"
+          ],
+          "sql": [
+            "SELECT `Service Month`, `Line of Business`, ROUND(MEASURE(`PMPM`), 2) AS PMPM FROM phanitha_test_catalog.tcoc_gold.tcoc_claims_metrics GROUP BY ALL ORDER BY `Service Month`"
+          ]
+        },
+        {
+          "id": "80c149db814d46f38d2ea44a25abb6be",
+          "question": [
+            "What is the denial rate by plan type?"
+          ],
+          "sql": [
+            "SELECT `Plan Type`, ROUND(MEASURE(`Denial Rate`), 1) AS Denial_Rate FROM phanitha_test_catalog.tcoc_gold.tcoc_claims_metrics GROUP BY ALL ORDER BY Denial_Rate DESC"
+          ]
+        }
+      ]
+    },
+    "benchmarks": {
+      "questions": [
+        {
+          "id": "01f1b2c40a221827aeaf41718cc6db9f",
+          "question": [
+            "What is the reimbursement rate by provider specialty?"
+          ],
+          "answer": [
+            {
+              "format": "SQL",
+              "content": [
+                "SELECT `Provider Specialty`, ROUND(MEASURE(`Reimbursement Rate`), 1) AS reimbursement_rate FROM phanitha_test_catalog.tcoc_gold.tcoc_claims_metrics GROUP BY ALL ORDER BY reimbursement_rate DESC"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "01f1b2c40a0c1632b66cdfe98dda532e",
+          "question": [
+            "What are the surgery costs by line of business over time?"
+          ],
+          "answer": [
+            {
+              "format": "SQL",
+              "content": [
+                "SELECT `Service Month`, `Line of Business`, ROUND(MEASURE(`Surgery Costs`), 2) AS surgery_costs FROM phanitha_test_catalog.tcoc_gold.tcoc_claims_metrics GROUP BY ALL ORDER BY `Service Month`"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "01f1b2c409f51a02bc88a5b050f77f9c",
+          "question": [
+            "What is the average PMPM by cost risk tier and line of business?"
+          ],
+          "answer": [
+            {
+              "format": "SQL",
+              "content": [
+                "SELECT `Cost Risk Tier`, `Line of Business`, ROUND(MEASURE(`Avg PMPM`), 2) AS avg_pmpm FROM phanitha_test_catalog.tcoc_gold.tcoc_member_metrics GROUP BY `Cost Risk Tier`, `Line of Business` ORDER BY avg_pmpm DESC"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "01f1b2c409e1147191db6f15cd6f1908",
+          "question": [
+            "Who are the top 10 highest cost members?"
+          ],
+          "answer": [
+            {
+              "format": "SQL",
+              "content": [
+                "SELECT member_id, member_code, line_of_business, plan_type, member_state, total_claims, ROUND(total_paid, 2) AS total_paid, ROUND(pmpm, 2) AS pmpm, cost_risk_tier FROM phanitha_test_catalog.tcoc_gold.tcoc_member_summary ORDER BY total_paid DESC LIMIT 10"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "01f1b2c409ca1cd590460e86421bb4b6",
+          "question": [
+            "What is total billed versus total paid by claim type?"
+          ],
+          "answer": [
+            {
+              "format": "SQL",
+              "content": [
+                "SELECT `Claim Type`, ROUND(MEASURE(`Total Billed`), 2) AS total_billed, ROUND(MEASURE(`Total Paid`), 2) AS total_paid FROM phanitha_test_catalog.hls_demo.claims_financial_metrics GROUP BY `Claim Type`"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "01f1b2c409b31c95abb4791bbb0a8575",
+          "question": [
+            "What is the payment rate by payer?"
+          ],
+          "answer": [
+            {
+              "format": "SQL",
+              "content": [
+                "SELECT `Payer`, ROUND(MEASURE(`Payment Rate`) * 100, 1) AS payment_rate_pct FROM phanitha_test_catalog.hls_demo.claims_financial_metrics GROUP BY `Payer` ORDER BY payment_rate_pct DESC"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "01f1b2c4099e1fdd8d594262d7c0c368",
+          "question": [
+            "What is the catastrophic cost share by line of business?"
+          ],
+          "answer": [
+            {
+              "format": "SQL",
+              "content": [
+                "SELECT `Line of Business`, ROUND(MEASURE(`Catastrophic Cost Share`), 1) AS catastrophic_cost_share_pct FROM phanitha_test_catalog.tcoc_gold.tcoc_member_metrics GROUP BY `Line of Business` ORDER BY catastrophic_cost_share_pct DESC"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "01f1b2c40987115b9a7db62f1f57db11",
+          "question": [
+            "How many members are in each cost risk tier?"
+          ],
+          "answer": [
+            {
+              "format": "SQL",
+              "content": [
+                "SELECT `Cost Risk Tier`, MEASURE(`Total Members`) AS total_members FROM phanitha_test_catalog.tcoc_gold.tcoc_member_metrics GROUP BY `Cost Risk Tier` ORDER BY total_members DESC"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "01f1b2c4096e1b0abb801f002df16957",
+          "question": [
+            "What is the predicted PMPM for the next quarter by line of business?"
+          ],
+          "answer": [
+            {
+              "format": "SQL",
+              "content": [
+                "SELECT forecast_month, line_of_business, ROUND(predicted_pmpm, 2) AS predicted_pmpm, ROUND(lower_bound, 2) AS lower_bound, ROUND(upper_bound, 2) AS upper_bound FROM phanitha_test_catalog.tcoc_gold.tcoc_cost_forecast WHERE forecast_month >= DATE_TRUNC('quarter', CURRENT_DATE) ORDER BY forecast_month, line_of_business"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "01f1b2c40959194d81293a8579052d03",
+          "question": [
+            "Which procedure categories have the highest total cost?"
+          ],
+          "answer": [
+            {
+              "format": "SQL",
+              "content": [
+                "SELECT `Procedure Category`, ROUND(MEASURE(`Total Paid`), 2) AS total_paid FROM phanitha_test_catalog.tcoc_gold.tcoc_claims_metrics GROUP BY ALL ORDER BY total_paid DESC"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "01f1b2c409431729b96924ed118fb36b",
+          "question": [
+            "What is the ER rate per 1000 by line of business?"
+          ],
+          "answer": [
+            {
+              "format": "SQL",
+              "content": [
+                "SELECT `Line of Business`, ROUND(MEASURE(`ER Rate per 1000`), 1) AS er_rate_per_1000 FROM phanitha_test_catalog.tcoc_gold.tcoc_claims_metrics GROUP BY ALL ORDER BY er_rate_per_1000 DESC"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "01f1b2c4092f131aa26aaa92a38143bd",
+          "question": [
+            "What is the network leakage rate by plan type?"
+          ],
+          "answer": [
+            {
+              "format": "SQL",
+              "content": [
+                "SELECT `Plan Type`, ROUND(MEASURE(`Network Leakage`), 1) AS network_leakage_pct FROM phanitha_test_catalog.tcoc_gold.tcoc_claims_metrics GROUP BY ALL ORDER BY network_leakage_pct DESC"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "01f1b2c4091a174780c04fcfc22e280f",
+          "question": [
+            "What is the total paid amount by state for Commercial members?"
+          ],
+          "answer": [
+            {
+              "format": "SQL",
+              "content": [
+                "SELECT `Member State`, ROUND(MEASURE(`Total Paid`), 2) AS total_paid FROM phanitha_test_catalog.tcoc_gold.tcoc_claims_metrics WHERE `Line of Business` = 'Commercial' GROUP BY ALL ORDER BY total_paid DESC"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "01f1b2c409041403b015f03c148c6164",
+          "question": [
+            "What is the denial rate by plan type?"
+          ],
+          "answer": [
+            {
+              "format": "SQL",
+              "content": [
+                "SELECT `Plan Type`, ROUND(MEASURE(`Denial Rate`), 1) AS denial_rate_pct FROM phanitha_test_catalog.tcoc_gold.tcoc_claims_metrics GROUP BY ALL ORDER BY denial_rate_pct DESC"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "01f1b2c408ed117c8145260c278447a5",
+          "question": [
+            "What is the PMPM trend by line of business over time?"
+          ],
+          "answer": [
+            {
+              "format": "SQL",
+              "content": [
+                "SELECT `Service Month`, `Line of Business`, ROUND(MEASURE(`PMPM`), 2) AS PMPM FROM phanitha_test_catalog.tcoc_gold.tcoc_claims_metrics GROUP BY ALL ORDER BY `Service Month`"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
